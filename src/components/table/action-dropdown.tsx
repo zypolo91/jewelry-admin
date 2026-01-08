@@ -62,7 +62,12 @@ export function ActionDropdown({
             className={`${action.className} cursor-pointer`}
             disabled={action.disabled}
           >
-            {action.label}
+            <div className='flex items-center'>
+              {action.icon ? (
+                <span className='flex items-center'>{action.icon}</span>
+              ) : null}
+              <span>{action.label}</span>
+            </div>
           </DropdownMenuItem>
         ))}
 

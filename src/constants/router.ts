@@ -4,6 +4,7 @@ import {
   SquareTerminal,
   Settings,
   ScrollText,
+  FolderOpen,
   Cog,
   Users,
   Shield,
@@ -90,6 +91,18 @@ export const systemNavList: NavItem[] = [
           searchShortcut: ['l'],
           searchSection: '系统管理',
           searchPriority: 5
+        }
+      },
+      {
+        title: '文件管理',
+        url: '/dashboard/system/files',
+        icon: FolderOpen,
+        description: '文件上传与管理',
+        searchConfig: {
+          keywords: 'files storage upload 文件 存储 上传 管理',
+          searchShortcut: ['f'],
+          searchSection: '系统管理',
+          searchPriority: 6
         }
       }
     ]

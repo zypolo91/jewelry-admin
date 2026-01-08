@@ -29,6 +29,14 @@ export const PERMISSIONS = {
     READ: 'system.log.read',
     DELETE: 'system.log.delete',
     EXPORT: 'system.log.export'
+  },
+  // 文件管理权限
+  FILE: {
+    READ: 'system.file.read',
+    UPLOAD: 'system.file.upload',
+    DELETE: 'system.file.delete',
+    FOLDER_CREATE: 'system.file.folder.create',
+    FOLDER_DELETE: 'system.file.folder.delete'
   }
 } as const;
 
@@ -39,5 +47,6 @@ export const ROUTE_PERMISSIONS = {
   '/dashboard/account/user': [PERMISSIONS.USER.READ],
   '/dashboard/account/role': [PERMISSIONS.ROLE.READ],
   '/dashboard/account/permission': [PERMISSIONS.PERMISSION.READ],
-  '/dashboard/system/logs': [PERMISSIONS.LOG.READ]
+  '/dashboard/system/logs': [PERMISSIONS.LOG.READ],
+  '/dashboard/system/files': [PERMISSIONS.FILE.READ]
 } as const;

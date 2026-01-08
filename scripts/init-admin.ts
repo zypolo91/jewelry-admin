@@ -1,131 +1,221 @@
-import { db } from "../src/db";
-import { users, roles, rolePermissions, permissions } from "../src/db/schema";
-import { eq, sql } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-import * as dotenv from "dotenv";
-import { surperAdmin } from "../src/config/surper-admin";
-import { getDatabaseDialect } from "../src/db/dialect";
+import { db } from '../src/db';
+import { users, roles, rolePermissions, permissions } from '../src/db/schema';
+import { eq, sql } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import * as dotenv from 'dotenv';
+import { surperAdmin } from '../src/config/surper-admin';
+import { getDatabaseDialect } from '../src/db/dialect';
 
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 const dialect = getDatabaseDialect();
 
 async function initSuperAdminRole() {
   console.log('开始初始化超级管理员角色...');
-  
-  const roleExists = await db.select().from(roles).where(eq(roles.name, '超级管理员'));
-  
-  if (roleExists.length === 0) {
-    const [superAdminRole] =
-      dialect === 'postgres'
-        ? await db
-            .insert(roles)
-            .values({
-              name: '超级管理员',
-              description: '系统超级管理员，拥有所有权限',
-              isSuper: true
-            })
-            .returning({ id: roles.id })
-        : await db
-            .insert(roles)
-            .values({
-              name: '超级管理员',
-              description: '系统超级管理员，拥有所有权限',
-              isSuper: true
-            })
-            .$returningId();
 
-    // 删除现有权限（如果存在）
-    await db.delete(permissions);
+  const roleExists = await db
+    .select()
+    .from(roles)
+    .where(eq(roles.name, '超级管理员'));
 
-    // 初始化基础权限
-    const permissionList = [
-      // 系统管理
-      { id: 1, name: '账号管理', code: 'account', description: '账号管理相关权限', parentId: null, sortOrder: 100 },
-      { id: 11, name: '用户管理', code: 'account.user', description: '用户管理权限', parentId: 1, sortOrder: 110 },
-      { id: 111, name: '查看用户', code: 'account.user.read', description: '查看用户列表和详情', parentId: 11, sortOrder: 111 },
-      { id: 112, name: '新增用户', code: 'account.user.create', description: '创建新用户', parentId: 11, sortOrder: 112 },
-      { id: 113, name: '编辑用户', code: 'account.user.update', description: '编辑用户信息', parentId: 11, sortOrder: 113 },
-      { id: 114, name: '删除用户', code: 'account.user.delete', description: '删除用户', parentId: 11, sortOrder: 114 },
-      
-      { id: 12, name: '角色管理', code: 'account.role', description: '角色管理权限', parentId: 1, sortOrder: 120 },
-      { id: 121, name: '查看角色', code: 'account.role.read', description: '查看角色列表和详情', parentId: 12, sortOrder: 121 },
-      { id: 122, name: '新增角色', code: 'account.role.create', description: '创建新角色', parentId: 12, sortOrder: 122 },
-      { id: 123, name: '编辑角色', code: 'account.role.update', description: '编辑角色信息', parentId: 12, sortOrder: 123 },
-      { id: 124, name: '删除角色', code: 'account.role.delete', description: '删除角色', parentId: 12, sortOrder: 124 },
-      { id: 125, name: '分配权限', code: 'account.role.assign', description: '给角色分配权限', parentId: 12, sortOrder: 125 },
-      
-      { id: 13, name: '权限管理', code: 'account.permission', description: '权限管理权限', parentId: 1, sortOrder: 130 },
-      { id: 131, name: '查看权限', code: 'account.permission.read', description: '查看权限列表和详情', parentId: 13, sortOrder: 131 },
-      { id: 132, name: '新增权限', code: 'account.permission.create', description: '创建新权限', parentId: 13, sortOrder: 132 },
-      { id: 133, name: '编辑权限', code: 'account.permission.update', description: '编辑权限信息', parentId: 13, sortOrder: 133 },
-      { id: 134, name: '删除权限', code: 'account.permission.delete', description: '删除权限', parentId: 13, sortOrder: 134 },
+  const superAdminRole =
+    roleExists.length > 0
+      ? roleExists[0]
+      : (
+          await (dialect === 'postgres'
+            ? db
+                .insert(roles)
+                .values({
+                  name: '超级管理员',
+                  description: '系统超级管理员，拥有所有权限',
+                  isSuper: true
+                })
+                .returning({ id: roles.id })
+            : db
+                .insert(roles)
+                .values({
+                  name: '超级管理员',
+                  description: '系统超级管理员，拥有所有权限',
+                  isSuper: true
+                })
+                .$returningId())
+        )[0];
 
-      // 系统管理
-      { id: 2, name: '系统管理', code: 'system', description: '系统管理权限', parentId: null, sortOrder: 200 },
-      { id: 21, name: '日志管理', code: 'system.log', description: '日志管理权限', parentId: 2, sortOrder: 210 },
-      { id: 211, name: '查看日志', code: 'system.log.read', description: '查看日志列表和详情', parentId: 21, sortOrder: 211 },
-      { id: 212, name: '新增日志', code: 'system.log.create', description: '创建新日志', parentId: 21, sortOrder: 212 },
-      { id: 213, name: '编辑日志', code: 'system.log.update', description: '编辑日志信息', parentId: 21, sortOrder: 213 },
-      { id: 214, name: '删除日志', code: 'system.log.delete', description: '删除日志', parentId: 21, sortOrder: 214 },
-      
-    ];
+  await syncFilePermissions(superAdminRole.id);
 
-    for (const permission of permissionList) {
-      await db.insert(permissions).values(permission as any);
-    }
+  console.log('超级管理员角色就绪');
+  return superAdminRole;
+}
 
-    // 如果手动插入了 serial 的 id，调整序列值避免后续插入冲突
-    if (dialect === 'postgres') {
-      await db.execute(
-        sql`select setval(pg_get_serial_sequence('permissions', 'id'), (select max(id) from permissions))`
-      );
-    }
+async function upsertPermissionByCode(input: {
+  code: string;
+  name: string;
+  description: string;
+  parentId: number | null;
+  sortOrder: number;
+}): Promise<number> {
+  const existing = await db
+    .select({ id: permissions.id })
+    .from(permissions)
+    .where(eq(permissions.code, input.code))
+    .limit(1);
 
-    // 创建角色-权限关联
-    await db.insert(rolePermissions).values(
-      permissionList.map((permission) => ({
-        roleId: superAdminRole.id,
-        permissionId: permission.id
-      }))
-    );
-
-    console.log('超级管理员角色创建成功！');
-    return superAdminRole;
+  if (existing.length === 0) {
+    await db.insert(permissions).values({
+      name: input.name,
+      code: input.code,
+      description: input.description,
+      parentId: input.parentId,
+      sortOrder: input.sortOrder
+    });
   } else {
-    console.log('超级管理员角色已存在');
-    return roleExists[0];
+    await db
+      .update(permissions)
+      .set({
+        name: input.name,
+        description: input.description,
+        parentId: input.parentId,
+        sortOrder: input.sortOrder
+      })
+      .where(eq(permissions.id, existing[0].id));
   }
+
+  const row = await db
+    .select({ id: permissions.id })
+    .from(permissions)
+    .where(eq(permissions.code, input.code))
+    .limit(1);
+
+  return row[0].id as number;
+}
+
+async function syncFilePermissions(roleId: number) {
+  console.log('同步文件管理权限...');
+
+  const systemId = await upsertPermissionByCode({
+    code: 'system',
+    name: '系统管理',
+    description: '系统管理权限',
+    parentId: null,
+    sortOrder: 200
+  });
+
+  const fileGroupId = await upsertPermissionByCode({
+    code: 'system.file',
+    name: '文件管理',
+    description: '文件管理权限',
+    parentId: systemId,
+    sortOrder: 220
+  });
+
+  const filePermissionIds: number[] = [];
+
+  filePermissionIds.push(
+    await upsertPermissionByCode({
+      code: 'system.file.read',
+      name: '查看文件',
+      description: '查看文件列表和详情',
+      parentId: fileGroupId,
+      sortOrder: 221
+    })
+  );
+  filePermissionIds.push(
+    await upsertPermissionByCode({
+      code: 'system.file.upload',
+      name: '上传文件',
+      description: '上传文件',
+      parentId: fileGroupId,
+      sortOrder: 222
+    })
+  );
+  filePermissionIds.push(
+    await upsertPermissionByCode({
+      code: 'system.file.delete',
+      name: '删除文件',
+      description: '删除文件',
+      parentId: fileGroupId,
+      sortOrder: 223
+    })
+  );
+  filePermissionIds.push(
+    await upsertPermissionByCode({
+      code: 'system.file.folder.create',
+      name: '创建文件夹',
+      description: '创建文件夹',
+      parentId: fileGroupId,
+      sortOrder: 224
+    })
+  );
+  filePermissionIds.push(
+    await upsertPermissionByCode({
+      code: 'system.file.folder.delete',
+      name: '删除文件夹',
+      description: '删除文件夹',
+      parentId: fileGroupId,
+      sortOrder: 225
+    })
+  );
+
+  // 修正 PG 序列（仅在表使用 serial 且出现手动插入时需要，这里防御性处理）
+  if (dialect === 'postgres') {
+    await db.execute(
+      sql`select setval(pg_get_serial_sequence('permissions', 'id'), (select max(id) from permissions))`
+    );
+  }
+
+  // 给超级管理员角色补齐权限
+  const existingRolePerms = await db
+    .select({ permissionId: rolePermissions.permissionId })
+    .from(rolePermissions)
+    .where(eq(rolePermissions.roleId, roleId));
+
+  const existingSet = new Set(
+    (existingRolePerms || []).map((r: any) => r.permissionId as number)
+  );
+
+  const toInsert = filePermissionIds
+    .filter((id) => !existingSet.has(id))
+    .map((permissionId) => ({ roleId, permissionId }));
+
+  if (toInsert.length > 0) {
+    await db.insert(rolePermissions).values(toInsert as any);
+  }
+
+  console.log('文件管理权限同步完成');
 }
 
 async function initSuperAdminUser(roleId: number) {
   console.log('开始初始化超级管理员账号...');
-  
+
   const adminPassword = surperAdmin.password;
   const saltRounds = Number(process.env.SALT_ROUNDS || 12);
   const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
 
-  const adminExists = await db.select().from(users).where(eq(users.email, surperAdmin.email));
+  const adminExists = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, surperAdmin.email));
 
-  if (adminExists.length === 0) {
-    await db.insert(users).values({
-      email: surperAdmin.email,
-      username: surperAdmin.username,
-      password: hashedPassword,
-      avatar: '/avatars/admin.jpg',
-      roleId: roleId,
-      status: 'active',
-      isSuperAdmin: true,
-    });
-
-    console.log('超级管理员账号创建成功！');
-    console.log('邮箱: ' + surperAdmin.email);
-    console.log('用户名: ' + surperAdmin.username);
-    console.log('请使用环境变量中配置的密码登录');
-  } else {
+  if (adminExists.length > 0) {
     console.log('超级管理员账号已存在');
+    return;
   }
+
+  await db.insert(users).values({
+    email: surperAdmin.email,
+    username: surperAdmin.username,
+    password: hashedPassword,
+    avatar: '/avatars/admin.jpg',
+    roleId,
+    status: 'active',
+    isSuperAdmin: true
+  });
+
+  console.log('超级管理员账号创建成功！');
+  console.log('邮箱: ' + surperAdmin.email);
+  console.log('用户名: ' + surperAdmin.username);
+  console.log('请使用环境变量中配置的密码登录');
 }
 
 async function main() {

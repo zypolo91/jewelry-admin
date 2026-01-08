@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { permissions } from '@/db/schema';
-import { like, and, gte, lte, count } from 'drizzle-orm';
+import { like, and, gte, lte, count, desc } from 'drizzle-orm';
 import { successResponse, errorResponse } from '@/service/response';
 
 export async function GET(request: Request) {
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     const permissionList = await query
       .limit(validLimit)
       .offset(offset)
-      .orderBy(permissions.createdAt);
+      .orderBy(desc(permissions.createdAt));
 
     // 计算分页信息
     const totalPages = Math.ceil(total / validLimit);

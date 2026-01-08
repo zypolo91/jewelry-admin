@@ -65,15 +65,15 @@ export function DataTable<T extends Record<string, any>>({
       <div className='h-full overflow-auto'>
         <Table className='h-full'>
           <TableHeader className='bg-background sticky top-0'>
-            <TableRow className='bg-muted/50 hover:bg-muted/50'>
+            <TableRow className='bg-muted/40 hover:bg-muted/40'>
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className={`bg-muted/50 font-semibold ${column.className || ''}`}
+                  className={`bg-muted/40 font-semibold ${column.className || ''}`}
                   style={{
                     position: 'sticky',
                     top: 0,
-                    backgroundColor: 'hsl(var(--muted) / 0.5)'
+                    backgroundColor: 'hsl(var(--muted) / 0.4)'
                   }}
                 >
                   {column.title}
@@ -110,7 +110,7 @@ export function DataTable<T extends Record<string, any>>({
               data.map((record, index) => (
                 <TableRow
                   key={getRowKey(record, index)}
-                  className='hover:bg-muted/50'
+                  className='odd:bg-muted/10 hover:bg-muted/40 transition-colors'
                 >
                   {columns.map((column) => (
                     <TableCell key={column.key} className={column.className}>

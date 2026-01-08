@@ -17,6 +17,18 @@ export class AuthAPI {
     });
   }
 
+  // 用户注册
+  static async register(payload: {
+    email: string;
+    password: string;
+    username: string;
+  }) {
+    return apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
   // 获取当前用户会话
   static async getSession() {
     return apiRequest('/auth/session');
