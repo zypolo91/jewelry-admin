@@ -8,7 +8,10 @@ import {
   Cog,
   Users,
   Shield,
-  Key
+  Key,
+  Gem,
+  Sparkles,
+  Share2
 } from 'lucide-react';
 
 // 业务导航列表
@@ -21,18 +24,62 @@ export const businessNavList: NavItem[] = [
     description: '工作台',
     items: [],
     searchConfig: {
-      keywords: 'dashboard overview home 仪表板 首页 工作台',
+      keywords: 'dashboard overview home 工作台',
       searchShortcut: ['d'],
       searchSection: '导航',
       searchPriority: 1
     }
+  },
+  {
+    title: '收藏管理',
+    url: '#',
+    icon: Gem,
+    isActive: false,
+    items: [
+      {
+        title: '珠宝列表',
+        url: '/dashboard/collection',
+        description: '管理收藏、估值与筛选',
+        icon: Sparkles,
+        searchConfig: {
+          keywords: 'jewel jewelry 收藏 列表 collection',
+          searchShortcut: ['c'],
+          searchSection: '业务',
+          searchPriority: 2
+        }
+      },
+      {
+        title: '分类管理',
+        url: '/dashboard/collection/categories',
+        description: '维护系统与自定义分类',
+        icon: FolderOpen,
+        searchConfig: {
+          keywords: 'category 分类 管理',
+          searchShortcut: ['g'],
+          searchSection: '业务',
+          searchPriority: 3
+        }
+      },
+      {
+        title: '渠道管理',
+        url: '/dashboard/collection/channels',
+        description: '配置购入渠道',
+        icon: Share2,
+        searchConfig: {
+          keywords: 'channel 渠道 购买 来源',
+          searchShortcut: ['h'],
+          searchSection: '业务',
+          searchPriority: 4
+        }
+      }
+    ]
   }
 ];
 
 // 系统导航列表
 export const systemNavList: NavItem[] = [
   {
-    title: '账号管理',
+    title: '账户管理',
     url: '#',
     icon: CircleUserRound,
     isActive: false,
@@ -109,5 +156,5 @@ export const systemNavList: NavItem[] = [
   }
 ];
 
-// 保持原有的navList导出以兼容现有代码
+// 导航聚合
 export const navList: NavItem[] = [...businessNavList, ...systemNavList];

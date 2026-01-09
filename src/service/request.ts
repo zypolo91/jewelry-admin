@@ -9,3 +9,6 @@ export { PermissionAPI } from './api/permission';
 export { DashboardAPI } from './api/dashboard';
 export { LogAPI } from './api/log';
 export { FileAPI } from './api/file';
+export { JewelryAPI } from './api/jewelry';
+export { JewelryCategoryAPI } from './api/jewelry-category';
+export { PurchaseChannelAPI } from './api/purchase-channel';

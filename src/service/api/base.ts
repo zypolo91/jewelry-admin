@@ -5,10 +5,15 @@ export const API_BASE_URL = '/api';
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  const isFormData = options.body instanceof FormData;
+
   const defaultOptions: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json'
-    }
+    headers: isFormData
+      ? options.headers
+      : {
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
   };
 
   const config = { ...defaultOptions, ...options };

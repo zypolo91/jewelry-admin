@@ -6,7 +6,9 @@ import {
   boolean,
   text,
   json,
-  unique
+  unique,
+  decimal,
+  date
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 
@@ -119,3 +121,98 @@ export const rolePermissionsRelations = relations(
   })
 );
 
+export const jewelryCategories = mysqlTable('jewelry_categories', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 50 }).notNull(),
+  icon: varchar('icon', { length: 255 }),
+  color: varchar('color', { length: 20 }),
+  sortOrder: int('sort_order').default(0),
+  isSystem: boolean('is_system').default(false),
+  userId: int('user_id'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const purchaseChannels = mysqlTable('purchase_channels', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 50 }).notNull(),
+  icon: varchar('icon', { length: 255 }),
+  sortOrder: int('sort_order').default(0),
+  isSystem: boolean('is_system').default(false),
+  userId: int('user_id'),
+  remark: text('remark'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const jewelries = mysqlTable('jewelries', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  categoryId: int('category_id').notNull(),
+  images: json('images').$type<string[]>(),
+  coverImage: varchar('cover_image', { length: 500 }),
+  purchasePrice: decimal('purchase_price', {
+    precision: 12,
+    scale: 2
+  }).notNull(),
+  purchaseDate: date('purchase_date').notNull(),
+  channelId: int('channel_id').notNull(),
+  sellerName: varchar('seller_name', { length: 100 }),
+  currentValue: decimal('current_value', { precision: 12, scale: 2 }),
+  valueUpdatedAt: timestamp('value_updated_at'),
+  specifications: json('specifications').$type<Record<string, string>>(),
+  qualityGrade: varchar('quality_grade', { length: 20 }),
+  certificateNo: varchar('certificate_no', { length: 100 }),
+  certificateImages: json('certificate_images').$type<string[]>(),
+  status: varchar('status', { length: 20 }).default('collected'),
+  remark: text('remark'),
+  extraData: json('extra_data'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+export const jewelryValueHistory = mysqlTable('jewelry_value_history', {
+  id: int('id').primaryKey().autoincrement(),
+  jewelryId: int('jewelry_id').notNull(),
+  value: decimal('value', { precision: 12, scale: 2 }).notNull(),
+  source: varchar('source', { length: 50 }),
+  remark: text('remark'),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+export const jewelryCategoriesRelations = relations(
+  jewelryCategories,
+  ({ many }) => ({
+    jewelries: many(jewelries)
+  })
+);
+
+export const purchaseChannelsRelations = relations(
+  purchaseChannels,
+  ({ many }) => ({
+    jewelries: many(jewelries)
+  })
+);
+
+export const jewelriesRelations = relations(jewelries, ({ one, many }) => ({
+  category: one(jewelryCategories, {
+    fields: [jewelries.categoryId],
+    references: [jewelryCategories.id]
+  }),
+  channel: one(purchaseChannels, {
+    fields: [jewelries.channelId],
+    references: [purchaseChannels.id]
+  }),
+  valueHistory: many(jewelryValueHistory)
+}));
+
+export const jewelryValueHistoryRelations = relations(
+  jewelryValueHistory,
+  ({ one }) => ({
+    jewelry: one(jewelries, {
+      fields: [jewelryValueHistory.jewelryId],
+      references: [jewelries.id]
+    })
+  })
+);
