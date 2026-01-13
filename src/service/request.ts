@@ -12,3 +12,4 @@ export { FileAPI } from './api/file';
 export { JewelryAPI } from './api/jewelry';
 export { JewelryCategoryAPI } from './api/jewelry-category';
 export { PurchaseChannelAPI } from './api/purchase-channel';
+export { UploadAPI } from './api/upload';

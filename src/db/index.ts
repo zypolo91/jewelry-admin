@@ -20,7 +20,12 @@ export const db: any =
                 ssl:
                   process.env.NODE_ENV === 'production'
                     ? { rejectUnauthorized: false }
-                    : undefined
+                    : undefined,
+                max: 20,
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 10000,
+                keepAlive: true,
+                keepAliveInitialDelayMillis: 10000
               }
             : {
                 host: process.env.DATABASE_HOST || '127.0.0.1',
@@ -31,7 +36,12 @@ export const db: any =
                 ssl:
                   process.env.NODE_ENV === 'production'
                     ? { rejectUnauthorized: false }
-                    : undefined
+                    : undefined,
+                max: 20,
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 10000,
+                keepAlive: true,
+                keepAliveInitialDelayMillis: 10000
               }
         ) as any
       )

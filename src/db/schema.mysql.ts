@@ -216,3 +216,50 @@ export const jewelryValueHistoryRelations = relations(
     })
   })
 );
+
+// VIP等级表
+export const vipLevels = mysqlTable('vip_levels', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 50 }).notNull(),
+  level: int('level').notNull().default(0),
+  price: decimal('price', { precision: 10, scale: 2 }).default('0'),
+  duration: int('duration').default(30),
+  maxJewelries: int('max_jewelries').default(50),
+  maxCategories: int('max_categories').default(10),
+  maxChannels: int('max_channels').default(10),
+  features: json('features').$type<string[]>(),
+  icon: varchar('icon', { length: 255 }),
+  color: varchar('color', { length: 20 }),
+  sortOrder: int('sort_order').default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 用户VIP记录表
+export const userVip = mysqlTable('user_vip', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  vipLevelId: int('vip_level_id').notNull(),
+  startAt: timestamp('start_at').notNull(),
+  expireAt: timestamp('expire_at').notNull(),
+  status: varchar('status', { length: 20 }).default('active'),
+  orderNo: varchar('order_no', { length: 100 }),
+  payAmount: decimal('pay_amount', { precision: 10, scale: 2 }),
+  payMethod: varchar('pay_method', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// VIP等级关系
+export const vipLevelsRelations = relations(vipLevels, ({ many }) => ({
+  userVips: many(userVip)
+}));
+
+// 用户VIP关系
+export const userVipRelations = relations(userVip, ({ one }) => ({
+  vipLevel: one(vipLevels, {
+    fields: [userVip.vipLevelId],
+    references: [vipLevels.id]
+  })
+}));

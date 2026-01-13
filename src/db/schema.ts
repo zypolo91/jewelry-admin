@@ -14,6 +14,8 @@ export const jewelryCategories = schema.jewelryCategories as any;
 export const purchaseChannels = schema.purchaseChannels as any;
 export const jewelries = schema.jewelries as any;
 export const jewelryValueHistory = schema.jewelryValueHistory as any;
+export const vipLevels = schema.vipLevels as any;
+export const userVip = schema.userVip as any;
 
 export const systemLogsRelations = schema.systemLogsRelations as any;
 export const usersRelations = schema.usersRelations as any;

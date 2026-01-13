@@ -229,3 +229,54 @@ export const jewelryValueHistoryRelations = relations(
     })
   })
 );
+
+// VIP等级表
+export const vipLevels = pgTable('vip_levels', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 50 }).notNull(), // VIP等级名称，如：普通会员、黄金会员、钻石会员
+  level: integer('level').notNull().default(0), // 等级数值，0=非VIP
+  price: numeric('price', { precision: 10, scale: 2 }).default('0'), // 开通价格
+  duration: integer('duration').default(30), // 有效期（天）
+  maxJewelries: integer('max_jewelries').default(50), // 最大珠宝数量
+  maxCategories: integer('max_categories').default(10), // 最大分类数量
+  maxChannels: integer('max_channels').default(10), // 最大渠道数量
+  features: jsonb('features').$type<string[]>(), // VIP特权列表
+  icon: varchar('icon', { length: 255 }), // VIP图标
+  color: varchar('color', { length: 20 }), // VIP颜色
+  sortOrder: integer('sort_order').default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+});
+
+// 用户VIP记录表
+export const userVip = pgTable('user_vip', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  vipLevelId: integer('vip_level_id').notNull(),
+  startAt: timestamp('start_at').notNull(),
+  expireAt: timestamp('expire_at').notNull(),
+  status: varchar('status', { length: 20 }).default('active'), // active, expired, cancelled
+  orderNo: varchar('order_no', { length: 100 }), // 订单号
+  payAmount: numeric('pay_amount', { precision: 10, scale: 2 }), // 实付金额
+  payMethod: varchar('pay_method', { length: 50 }), // 支付方式
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+});
+
+// VIP等级关系
+export const vipLevelsRelations = relations(vipLevels, ({ many }) => ({
+  userVips: many(userVip)
+}));
+
+// 用户VIP关系
+export const userVipRelations = relations(userVip, ({ one }) => ({
+  vipLevel: one(vipLevels, {
+    fields: [userVip.vipLevelId],
+    references: [vipLevels.id]
+  })
+}));

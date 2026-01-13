@@ -375,22 +375,37 @@ export default function CollectionPage() {
         {/* Summary */}
         <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
           {summaryCards
-            ? summaryCards.map((card) => (
+            ? summaryCards.map((card, idx) => (
                 <Card
                   key={card.title}
-                  className='border-border/60 bg-card/70 backdrop-blur'
+                  className='border-border/50 bg-card/80 relative overflow-hidden backdrop-blur-xl transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl'
                 >
-                  <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                    <CardTitle className='text-sm font-medium'>
-                      {card.title}
-                    </CardTitle>
-                    <card.icon className='text-primary h-4 w-4' />
+                  <div className='to-primary/10 pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/[0.08] via-transparent opacity-75' />
+                  <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2'>
+                    <div>
+                      <CardTitle className='text-muted-foreground text-sm font-semibold tracking-wide'>
+                        {card.title}
+                      </CardTitle>
+                      <p className='text-muted-foreground/70 text-xs'>
+                        {card.description}
+                      </p>
+                    </div>
+                    <div className='rounded-full border border-white/20 bg-white/80 p-2 shadow-sm backdrop-blur'>
+                      <card.icon className='text-primary h-4 w-4' />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className='text-2xl font-bold'>{card.value}</div>
-                    <p className='text-muted-foreground text-xs'>
-                      {card.description}
-                    </p>
+                    <div className='flex items-baseline justify-between gap-2'>
+                      <span className='text-foreground text-3xl font-bold tracking-tight'>
+                        {card.value}
+                      </span>
+                      <Badge
+                        variant='secondary'
+                        className='text-muted-foreground border-transparent bg-white/70 text-xs'
+                      >
+                        TOP {idx + 1}
+                      </Badge>
+                    </div>
                   </CardContent>
                 </Card>
               ))

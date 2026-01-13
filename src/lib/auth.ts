@@ -63,10 +63,23 @@ export function verifyToken(token: string): User | null {
 
 /**
  * 从Request中获取当前用户信息 - 用于API routes
+ * 支持从 Authorization header (Bearer token) 或 cookie 中获取token
  */
 export function getCurrentUser(request: Request): User | null {
   try {
-    const token = request.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
+    let token: string | undefined;
+
+    // 优先从 Authorization header 获取 (移动端)
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.slice(7);
+    }
+
+    // 如果没有 Authorization header，从 cookie 获取 (Web端)
+    if (!token) {
+      token = request.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
+    }
+
     if (!token) {
       return null;
     }

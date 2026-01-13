@@ -13,12 +13,13 @@ import {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = getCurrentUser(request);
   if (!user) return unauthorizedResponse();
 
-  const categoryId = Number(params.id);
+  const { id } = await params;
+  const categoryId = Number(id);
   if (Number.isNaN(categoryId)) {
     return errorResponse('无效的分类ID');
   }
@@ -67,12 +68,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = getCurrentUser(request);
   if (!user) return unauthorizedResponse();
 
-  const categoryId = Number(params.id);
+  const { id } = await params;
+  const categoryId = Number(id);
   if (Number.isNaN(categoryId)) {
     return errorResponse('无效的分类ID');
   }

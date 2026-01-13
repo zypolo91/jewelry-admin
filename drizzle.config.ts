@@ -8,7 +8,8 @@ dotenv.config();
 const dialect = getDatabaseDialect();
 
 const kitDialect = dialect === 'postgres' ? 'postgresql' : 'mysql';
-const schema = dialect === 'postgres' ? './src/db/schema.pg.ts' : './src/db/schema.mysql.ts';
+const schema =
+  dialect === 'postgres' ? './src/db/schema.pg.ts' : './src/db/schema.mysql.ts';
 const out = dialect === 'postgres' ? './drizzle/pg' : './drizzle';
 
 const dbCredentials =
@@ -20,19 +21,14 @@ const dbCredentials =
           port: Number(process.env.DATABASE_PORT) || 5432,
           user: process.env.DATABASE_USERNAME,
           password: process.env.DATABASE_PASSWORD,
-          database: process.env.DATABASE_NAME!,
-          ssl:
-            process.env.NODE_ENV === 'production'
-              ? { rejectUnauthorized: false }
-              : undefined
+          database: process.env.DATABASE_NAME!
         }
       : {
           host: process.env.DATABASE_HOST!,
           port: Number(process.env.DATABASE_PORT) || 3306,
           user: process.env.DATABASE_USERNAME,
           password: process.env.DATABASE_PASSWORD,
-          database: process.env.DATABASE_NAME!,
-          ssl: undefined
+          database: process.env.DATABASE_NAME!
         };
 
 export default defineConfig({
