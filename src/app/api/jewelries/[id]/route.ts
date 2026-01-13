@@ -12,12 +12,13 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = getCurrentUser(request);
   if (!user) return unauthorizedResponse();
 
-  const jewelryId = Number(params.id);
+  const { id } = await params;
+  const jewelryId = Number(id);
   if (Number.isNaN(jewelryId)) {
     return errorResponse('无效的珠宝ID');
   }
@@ -68,12 +69,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = getCurrentUser(request);
   if (!user) return unauthorizedResponse();
 
-  const jewelryId = Number(params.id);
+  const { id } = await params;
+  const jewelryId = Number(id);
   if (Number.isNaN(jewelryId)) {
     return errorResponse('无效的珠宝ID');
   }
@@ -125,12 +127,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = getCurrentUser(request);
   if (!user) return unauthorizedResponse();
 
-  const jewelryId = Number(params.id);
+  const { id } = await params;
+  const jewelryId = Number(id);
   if (Number.isNaN(jewelryId)) {
     return errorResponse('无效的珠宝ID');
   }

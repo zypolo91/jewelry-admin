@@ -6,10 +6,11 @@ import { eq } from 'drizzle-orm';
 // GET - 获取单个VIP等级
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
     if (isNaN(id)) {
       return NextResponse.json(
         { code: 400, message: '无效的ID' },
@@ -46,10 +47,11 @@ export async function GET(
 // PUT - 更新VIP等级
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
     if (isNaN(id)) {
       return NextResponse.json(
         { code: 400, message: '无效的ID' },
@@ -116,10 +118,11 @@ export async function PUT(
 // DELETE - 删除VIP等级
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
     if (isNaN(id)) {
       return NextResponse.json(
         { code: 400, message: '无效的ID' },
