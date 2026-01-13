@@ -42,16 +42,19 @@ export async function GET(request: Request) {
 
     const totalCount = records.length;
     const collectedCount = records.filter(
-      (r) => r.status === 'collected'
+      (r: (typeof records)[number]) => r.status === 'collected'
     ).length;
-    const soldCount = records.filter((r) => r.status === 'sold').length;
+    const soldCount = records.filter(
+      (r: (typeof records)[number]) => r.status === 'sold'
+    ).length;
 
     const totalInvestment = records.reduce(
-      (sum, r) => sum + Number(r.purchasePrice ?? 0),
+      (sum: number, r: (typeof records)[number]) =>
+        sum + Number(r.purchasePrice ?? 0),
       0
     );
     const totalValue = records.reduce(
-      (sum, r) =>
+      (sum: number, r: (typeof records)[number]) =>
         sum +
         Number(
           r.currentValue !== null && r.currentValue !== undefined
@@ -70,7 +73,7 @@ export async function GET(request: Request) {
       number,
       { categoryId: number; name: string | null; count: number; value: number }
     >();
-    records.forEach((item) => {
+    records.forEach((item: (typeof records)[number]) => {
       const catKey = item.categoryId;
       const entry = byCategoryMap.get(catKey) || {
         categoryId: catKey,
@@ -87,7 +90,7 @@ export async function GET(request: Request) {
       number,
       { channelId: number; name: string | null; count: number; amount: number }
     >();
-    records.forEach((item) => {
+    records.forEach((item: (typeof records)[number]) => {
       const channelKey = item.channelId;
       const entry = byChannelMap.get(channelKey) || {
         channelId: channelKey,
@@ -104,7 +107,7 @@ export async function GET(request: Request) {
       string,
       { month: string; count: number; amount: number }
     >();
-    records.forEach((item) => {
+    records.forEach((item: (typeof records)[number]) => {
       const date = new Date(item.purchaseDate as any);
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
@@ -121,7 +124,7 @@ export async function GET(request: Request) {
 
     const priceDistribution = priceRanges.map((range) => ({
       range: range.label,
-      count: records.filter((item) => {
+      count: records.filter((item: (typeof records)[number]) => {
         const value = Number(item.purchasePrice ?? 0);
         return value >= range.min && value < range.max;
       }).length
