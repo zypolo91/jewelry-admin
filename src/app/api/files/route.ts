@@ -164,7 +164,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!paths.length) return errorResponse('缺少 path');
 
-    const safePaths = paths.map((p) => normalizeStoragePath(p));
+    const safePaths = paths.map((p: string) => normalizeStoragePath(p));
 
     const supabase = getSupabaseAdmin();
     const bucket = getSupabaseStorageBucket();
