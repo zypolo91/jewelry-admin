@@ -66,6 +66,7 @@ type JewelryItem = {
   purchaseDate: string;
   status: string;
   sellerName?: string | null;
+  qualityGrade?: string | null;
   remark?: string | null;
 };
 
