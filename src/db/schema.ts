@@ -29,3 +29,42 @@ export const purchaseChannelsRelations =
 export const jewelriesRelations = schema.jewelriesRelations as any;
 export const jewelryValueHistoryRelations =
   schema.jewelryValueHistoryRelations as any;
+
+// V2.0 新增表导出
+export const achievements = schema.achievements as any;
+export const userAchievements = schema.userAchievements as any;
+export const userLevels = schema.userLevels as any;
+export const levelConfig = schema.levelConfig as any;
+export const aiValuations = schema.aiValuations as any;
+export const aiAuthentications = schema.aiAuthentications as any;
+export const aiChats = schema.aiChats as any;
+export const aiQuotas = schema.aiQuotas as any;
+export const topics = schema.topics as any;
+export const posts = schema.posts as any;
+export const comments = schema.comments as any;
+export const likes = schema.likes as any;
+export const follows = schema.follows as any;
+export const messages = schema.messages as any;
+export const reminders = schema.reminders as any;
+export const notifications = schema.notifications as any;
+export const themes = schema.themes as any;
+export const userThemes = schema.userThemes as any;
+export const userSettings = schema.userSettings as any;
+export const dailyCheckins = schema.dailyCheckins as any;
+
+// V2.0 关系导出
+export const achievementsRelations = schema.achievementsRelations as any;
+export const userAchievementsRelations =
+  schema.userAchievementsRelations as any;
+export const userLevelsRelations = schema.userLevelsRelations as any;
+export const aiValuationsRelations = schema.aiValuationsRelations as any;
+export const aiAuthenticationsRelations =
+  schema.aiAuthenticationsRelations as any;
+export const topicsRelations = schema.topicsRelations as any;
+export const postsRelations = schema.postsRelations as any;
+export const commentsRelations = schema.commentsRelations as any;
+export const remindersRelations = schema.remindersRelations as any;
+export const notificationsRelations = schema.notificationsRelations as any;
+export const themesRelations = schema.themesRelations as any;
+export const userThemesRelations = schema.userThemesRelations as any;
+export const userSettingsRelations = schema.userSettingsRelations as any;

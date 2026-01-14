@@ -76,24 +76,28 @@ export async function GET() {
       .groupBy(systemLogs.level)
       .orderBy(desc(count()));
 
-    // 获取最近30天的用户注册数量（简化版）
+    // 获取最近30天的用户注册数量（优化版 - 单次查询）
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const usersByDay = await db
+      .select({
+        date: sql<string>`DATE(${users.createdAt})`,
+        count: count()
+      })
+      .from(users)
+      .where(gte(users.createdAt, thirtyDaysAgo))
+      .groupBy(sql`DATE(${users.createdAt})`);
+
+    // 构建30天趋势数据
     const userTrend = [];
+    const usersByDayMap = new Map(
+      usersByDay.map((d: any) => [d.date, d.count])
+    );
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const startOfTargetDay = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-      );
-
-      const [dayUsers] = await db
-        .select({ count: count() })
-        .from(users)
-        .where(gte(users.createdAt, startOfTargetDay));
-
+      const dateStr = date.toISOString().split('T')[0];
       userTrend.push({
-        date: date.toISOString().split('T')[0],
-        users: dayUsers.count || 0
+        date: dateStr,
+        users: usersByDayMap.get(dateStr) || 0
       });
     }
 

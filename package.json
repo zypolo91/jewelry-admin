@@ -10,6 +10,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "init:admin": "tsx scripts/init-admin.ts",
     "seed:defaults": "tsx scripts/seed-defaults.ts",
+    "seed:v2": "tsx scripts/seed-v2.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",

@@ -263,3 +263,347 @@ export const userVipRelations = relations(userVip, ({ one }) => ({
     references: [vipLevels.id]
   })
 }));
+
+// ==================== V2.0 新增表 ====================
+
+// 成就定义表
+export const achievements = mysqlTable('achievements', {
+  id: int('id').primaryKey().autoincrement(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  icon: varchar('icon', { length: 255 }),
+  category: varchar('category', { length: 50 }).notNull(),
+  conditionType: varchar('condition_type', { length: 50 }).notNull(),
+  conditionValue: int('condition_value').notNull(),
+  conditionExtra: json('condition_extra'),
+  points: int('points').default(10),
+  rarity: varchar('rarity', { length: 20 }).default('common'),
+  isHidden: boolean('is_hidden').default(false),
+  sortOrder: int('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 用户成就记录表
+export const userAchievements = mysqlTable('user_achievements', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  achievementId: int('achievement_id').notNull(),
+  progress: int('progress').default(0),
+  unlockedAt: timestamp('unlocked_at'),
+  isClaimed: boolean('is_claimed').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 用户等级表
+export const userLevels = mysqlTable('user_levels', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull().unique(),
+  level: int('level').default(1),
+  exp: int('exp').default(0),
+  totalPoints: int('total_points').default(0),
+  title: varchar('title', { length: 50 }).default('收藏新手'),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 等级配置表
+export const levelConfig = mysqlTable('level_config', {
+  level: int('level').primaryKey(),
+  title: varchar('title', { length: 50 }).notNull(),
+  expRequired: int('exp_required').notNull(),
+  privileges: json('privileges')
+});
+
+// AI估价记录表
+export const aiValuations = mysqlTable('ai_valuations', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  jewelryId: int('jewelry_id'),
+  imageUrl: varchar('image_url', { length: 500 }).notNull(),
+  category: varchar('category', { length: 50 }),
+  material: varchar('material', { length: 100 }),
+  qualityScore: decimal('quality_score', { precision: 3, scale: 2 }),
+  estimatedMin: decimal('estimated_min', { precision: 12, scale: 2 }),
+  estimatedMax: decimal('estimated_max', { precision: 12, scale: 2 }),
+  confidence: decimal('confidence', { precision: 3, scale: 2 }),
+  analysis: json('analysis'),
+  modelVersion: varchar('model_version', { length: 20 }),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// AI鉴定记录表
+export const aiAuthentications = mysqlTable('ai_authentications', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  jewelryId: int('jewelry_id'),
+  imageUrls: json('image_urls').$type<string[]>().notNull(),
+  result: varchar('result', { length: 20 }).notNull(),
+  confidence: decimal('confidence', { precision: 3, scale: 2 }),
+  issues: json('issues'),
+  suggestions: text('suggestions'),
+  modelVersion: varchar('model_version', { length: 20 }),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// AI对话记录表
+export const aiChats = mysqlTable('ai_chats', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  sessionId: varchar('session_id', { length: 100 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// AI配额表
+export const aiQuotas = mysqlTable('ai_quotas', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  quotaType: varchar('quota_type', { length: 50 }).notNull(),
+  totalQuota: int('total_quota').notNull(),
+  usedQuota: int('used_quota').default(0),
+  resetDate: date('reset_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 话题表
+export const topics = mysqlTable('topics', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  icon: varchar('icon', { length: 255 }),
+  color: varchar('color', { length: 20 }),
+  postCount: int('post_count').default(0),
+  isHot: boolean('is_hot').default(false),
+  sortOrder: int('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 社区动态表
+export const posts = mysqlTable('posts', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  content: text('content').notNull(),
+  images: json('images').$type<string[]>(),
+  jewelryIds: json('jewelry_ids').$type<number[]>(),
+  topicId: int('topic_id'),
+  type: varchar('type', { length: 20 }).default('normal'),
+  visibility: varchar('visibility', { length: 20 }).default('public'),
+  likeCount: int('like_count').default(0),
+  commentCount: int('comment_count').default(0),
+  shareCount: int('share_count').default(0),
+  isPinned: boolean('is_pinned').default(false),
+  status: varchar('status', { length: 20 }).default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 评论表
+export const comments = mysqlTable('comments', {
+  id: int('id').primaryKey().autoincrement(),
+  postId: int('post_id').notNull(),
+  userId: int('user_id').notNull(),
+  parentId: int('parent_id'),
+  content: text('content').notNull(),
+  likeCount: int('like_count').default(0),
+  status: varchar('status', { length: 20 }).default('active'),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 点赞表
+export const likes = mysqlTable('likes', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  targetType: varchar('target_type', { length: 20 }).notNull(),
+  targetId: int('target_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 关注关系表
+export const follows = mysqlTable('follows', {
+  id: int('id').primaryKey().autoincrement(),
+  followerId: int('follower_id').notNull(),
+  followingId: int('following_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 私信表
+export const messages = mysqlTable('messages', {
+  id: int('id').primaryKey().autoincrement(),
+  senderId: int('sender_id').notNull(),
+  receiverId: int('receiver_id').notNull(),
+  content: text('content').notNull(),
+  isRead: boolean('is_read').default(false),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 提醒配置表
+export const reminders = mysqlTable('reminders', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  jewelryId: int('jewelry_id'),
+  type: varchar('type', { length: 50 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  message: text('message'),
+  triggerDate: date('trigger_date'),
+  repeatType: varchar('repeat_type', { length: 20 }),
+  isEnabled: boolean('is_enabled').default(true),
+  lastTriggered: timestamp('last_triggered'),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 通知表
+export const notifications = mysqlTable('notifications', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  type: varchar('type', { length: 50 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  content: text('content'),
+  data: json('data'),
+  isRead: boolean('is_read').default(false),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 主题皮肤表
+export const themes = mysqlTable('themes', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 50 }).notNull(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  description: text('description'),
+  preview: varchar('preview', { length: 255 }),
+  colors: json('colors'),
+  isVip: boolean('is_vip').default(false),
+  isPremium: boolean('is_premium').default(false),
+  price: decimal('price', { precision: 10, scale: 2 }).default('0'),
+  sortOrder: int('sort_order').default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 用户主题表
+export const userThemes = mysqlTable('user_themes', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  themeId: int('theme_id').notNull(),
+  isActive: boolean('is_active').default(false),
+  purchasedAt: timestamp('purchased_at').defaultNow()
+});
+
+// 用户设置表
+export const userSettings = mysqlTable('user_settings', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull().unique(),
+  appLockEnabled: boolean('app_lock_enabled').default(false),
+  appLockType: varchar('app_lock_type', { length: 20 }),
+  appLockPin: varchar('app_lock_pin', { length: 255 }),
+  privacyMode: boolean('privacy_mode').default(false),
+  watermarkEnabled: boolean('watermark_enabled').default(false),
+  notificationEnabled: boolean('notification_enabled').default(true),
+  dailyReminderTime: varchar('daily_reminder_time', { length: 10 }),
+  language: varchar('language', { length: 10 }).default('zh'),
+  currency: varchar('currency', { length: 10 }).default('CNY'),
+  extraSettings: json('extra_settings'),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 每日签到表
+export const dailyCheckins = mysqlTable('daily_checkins', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  checkinDate: date('checkin_date').notNull(),
+  streak: int('streak').default(1),
+  points: int('points').default(0),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// ==================== V2.0 表关系 ====================
+
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements)
+}));
+
+export const userAchievementsRelations = relations(
+  userAchievements,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userAchievements.userId],
+      references: [users.id]
+    }),
+    achievement: one(achievements, {
+      fields: [userAchievements.achievementId],
+      references: [achievements.id]
+    })
+  })
+);
+
+export const userLevelsRelations = relations(userLevels, ({ one }) => ({
+  user: one(users, { fields: [userLevels.userId], references: [users.id] })
+}));
+
+export const aiValuationsRelations = relations(aiValuations, ({ one }) => ({
+  user: one(users, { fields: [aiValuations.userId], references: [users.id] }),
+  jewelry: one(jewelries, {
+    fields: [aiValuations.jewelryId],
+    references: [jewelries.id]
+  })
+}));
+
+export const aiAuthenticationsRelations = relations(
+  aiAuthentications,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [aiAuthentications.userId],
+      references: [users.id]
+    }),
+    jewelry: one(jewelries, {
+      fields: [aiAuthentications.jewelryId],
+      references: [jewelries.id]
+    })
+  })
+);
+
+export const topicsRelations = relations(topics, ({ many }) => ({
+  posts: many(posts)
+}));
+
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  user: one(users, { fields: [posts.userId], references: [users.id] }),
+  topic: one(topics, { fields: [posts.topicId], references: [topics.id] }),
+  comments: many(comments)
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  post: one(posts, { fields: [comments.postId], references: [posts.id] }),
+  user: one(users, { fields: [comments.userId], references: [users.id] }),
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.id]
+  })
+}));
+
+export const remindersRelations = relations(reminders, ({ one }) => ({
+  user: one(users, { fields: [reminders.userId], references: [users.id] }),
+  jewelry: one(jewelries, {
+    fields: [reminders.jewelryId],
+    references: [jewelries.id]
+  })
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] })
+}));
+
+export const themesRelations = relations(themes, ({ many }) => ({
+  userThemes: many(userThemes)
+}));
+
+export const userThemesRelations = relations(userThemes, ({ one }) => ({
+  user: one(users, { fields: [userThemes.userId], references: [users.id] }),
+  theme: one(themes, { fields: [userThemes.themeId], references: [themes.id] })
+}));
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+  user: one(users, { fields: [userSettings.userId], references: [users.id] })
+}));
