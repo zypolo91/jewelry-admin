@@ -63,7 +63,10 @@ function createDb() {
           connectionLimit: 10,
           queueLimit: 0
         });
-    return drizzleMysql(mysqlPool as any, { schema: mysqlSchema });
+    return drizzleMysql(mysqlPool as any, {
+      schema: mysqlSchema,
+      mode: 'default'
+    });
   }
 }
 
