@@ -47,24 +47,22 @@ function createDb() {
     );
     return drizzlePg(pgPool as any, { schema: pgSchema });
   } else {
-    const mysqlPool = mysql.createPool(
-      process.env.DATABASE_URL
-        ? process.env.DATABASE_URL
-        : {
-            host: process.env.DATABASE_HOST || '127.0.0.1',
-            port: Number(process.env.DATABASE_PORT) || 3306,
-            user: process.env.DATABASE_USERNAME || 'root',
-            password: process.env.DATABASE_PASSWORD || 'root',
-            database: process.env.DATABASE_NAME || 'n_admin',
-            ssl:
-              process.env.NODE_ENV === 'production'
-                ? { rejectUnauthorized: false }
-                : undefined,
-            waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0
-          }
-    );
+    const mysqlPool = process.env.DATABASE_URL
+      ? mysql.createPool(process.env.DATABASE_URL)
+      : mysql.createPool({
+          host: process.env.DATABASE_HOST || '127.0.0.1',
+          port: Number(process.env.DATABASE_PORT) || 3306,
+          user: process.env.DATABASE_USERNAME || 'root',
+          password: process.env.DATABASE_PASSWORD || 'root',
+          database: process.env.DATABASE_NAME || 'n_admin',
+          ssl:
+            process.env.NODE_ENV === 'production'
+              ? { rejectUnauthorized: false }
+              : undefined,
+          waitForConnections: true,
+          connectionLimit: 10,
+          queueLimit: 0
+        });
     return drizzleMysql(mysqlPool as any, { schema: mysqlSchema });
   }
 }
