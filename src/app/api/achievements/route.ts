@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
 
     const result = allAchievements.map(
       (a: (typeof allAchievements)[number]) => {
-        const ua = userAchievementMap.get(a.id);
+        const ua = userAchievementMap.get(a.id) as
+          | (typeof userAchievementList)[number]
+          | undefined;
         return {
           id: a.id,
           code: a.code,
@@ -72,7 +74,9 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const unlockedCount = result.filter((r) => r.isUnlocked).length;
+    const unlockedCount = result.filter(
+      (r: (typeof result)[number]) => r.isUnlocked
+    ).length;
 
     return NextResponse.json({
       success: true,
