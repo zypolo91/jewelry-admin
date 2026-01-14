@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -17,7 +17,8 @@ export async function PUT(
       );
     }
 
-    const reminderId = parseInt(params.id);
+    const { id } = await params;
+    const reminderId = parseInt(id);
     const reminder = await db.query.reminders.findFirst({
       where: eq(reminders.id, reminderId)
     });
@@ -43,7 +44,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -54,7 +55,8 @@ export async function DELETE(
       );
     }
 
-    const reminderId = parseInt(params.id);
+    const { id } = await params;
+    const reminderId = parseInt(id);
     const reminder = await db.query.reminders.findFirst({
       where: eq(reminders.id, reminderId)
     });

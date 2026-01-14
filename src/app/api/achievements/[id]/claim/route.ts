@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -17,7 +17,8 @@ export async function POST(
       );
     }
 
-    const achievementId = parseInt(params.id);
+    const { id } = await params;
+    const achievementId = parseInt(id);
 
     const userAchievement = await db.query.userAchievements.findFirst({
       where: and(

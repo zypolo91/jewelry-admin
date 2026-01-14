@@ -6,10 +6,11 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const postId = parseInt(params.id);
+    const { id } = await params;
+    const postId = parseInt(id);
     const post = await db.query.posts.findFirst({
       where: eq(posts.id, postId),
       with: { user: true, topic: true, comments: { with: { user: true } } }
@@ -33,7 +34,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -44,7 +45,8 @@ export async function PUT(
       );
     }
 
-    const postId = parseInt(params.id);
+    const { id } = await params;
+    const postId = parseInt(id);
     const post = await db.query.posts.findFirst({
       where: eq(posts.id, postId)
     });
@@ -82,7 +84,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -93,7 +95,8 @@ export async function DELETE(
       );
     }
 
-    const postId = parseInt(params.id);
+    const { id } = await params;
+    const postId = parseInt(id);
     const post = await db.query.posts.findFirst({
       where: eq(posts.id, postId)
     });
