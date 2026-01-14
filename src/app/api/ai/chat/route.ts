@@ -49,10 +49,12 @@ export async function POST(request: NextRequest) {
       limit: 10
     });
 
-    const messages: ChatMessage[] = history.reverse().map((h) => ({
-      role: h.role as 'user' | 'assistant',
-      content: h.content
-    }));
+    const messages: ChatMessage[] = history
+      .reverse()
+      .map((h: (typeof history)[number]) => ({
+        role: h.role as 'user' | 'assistant',
+        content: h.content
+      }));
     messages.push({ role: 'user', content: message });
 
     const reply = await zhipuAIService.chat(messages, currentSessionId);

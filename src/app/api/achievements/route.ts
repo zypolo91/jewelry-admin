@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
     });
 
     const userAchievementMap = new Map(
-      userAchievementList.map((ua) => [ua.achievementId, ua])
+      userAchievementList.map((ua: (typeof userAchievementList)[number]) => [
+        ua.achievementId,
+        ua
+      ])
     );
 
     // 获取用户等级
@@ -47,25 +50,27 @@ export async function GET(request: NextRequest) {
       level = newLevel;
     }
 
-    const result = allAchievements.map((a) => {
-      const ua = userAchievementMap.get(a.id);
-      return {
-        id: a.id,
-        code: a.code,
-        name: a.name,
-        description: a.description,
-        icon: a.icon,
-        category: a.category,
-        points: a.points,
-        rarity: a.rarity,
-        isHidden: a.isHidden,
-        target: a.conditionValue,
-        progress: ua?.progress || 0,
-        isUnlocked: !!ua?.unlockedAt,
-        unlockedAt: ua?.unlockedAt,
-        isClaimed: ua?.isClaimed || false
-      };
-    });
+    const result = allAchievements.map(
+      (a: (typeof allAchievements)[number]) => {
+        const ua = userAchievementMap.get(a.id);
+        return {
+          id: a.id,
+          code: a.code,
+          name: a.name,
+          description: a.description,
+          icon: a.icon,
+          category: a.category,
+          points: a.points,
+          rarity: a.rarity,
+          isHidden: a.isHidden,
+          target: a.conditionValue,
+          progress: ua?.progress || 0,
+          isUnlocked: !!ua?.unlockedAt,
+          unlockedAt: ua?.unlockedAt,
+          isClaimed: ua?.isClaimed || false
+        };
+      }
+    );
 
     const unlockedCount = result.filter((r) => r.isUnlocked).length;
 
