@@ -72,7 +72,15 @@ export async function GET(request: NextRequest) {
           m.content as last_message,
           u.username,
           u.avatar,
-          (SELECT COUNT(*) FROM messages WHERE sender_id = lm.chat_user_id AND receiver_id = ${user.id} AND is_read = false) as unread_count
+          (SELECT COUNT(*) FROM messages WHERE sender_id = lm.chat_user_id AND receiver_id = ${user.id} AND is_read = false) as unread_count,
+          CASE 
+            WHEN EXISTS (
+              SELECT 1 FROM follows f1
+              INNER JOIN follows f2 ON f1.following_id = f2.follower_id AND f1.follower_id = f2.following_id
+              WHERE f1.follower_id = ${user.id} AND f1.following_id = lm.chat_user_id
+            ) THEN true
+            ELSE false
+          END as is_friend
         FROM latest_messages lm
         JOIN messages m ON (
           (m.sender_id = ${user.id} AND m.receiver_id = lm.chat_user_id) OR
