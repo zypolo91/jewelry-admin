@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         isSuperAdmin: user[0].isSuperAdmin
       },
       process.env.JWT_SECRET || 'secret',
-      { expiresIn: '1d' }
+      { expiresIn: '30d' }
     );
 
     await logger.info(
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         email: user[0].email,
         roleId: user[0].roleId,
         loginTime: new Date().toISOString(),
-        tokenExpiry: '24小时'
+        tokenExpiry: '30天'
       },
       user[0].id
     );
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24
+      maxAge: 60 * 60 * 24 * 30
     });
 
     return response;

@@ -15,6 +15,20 @@
       "when": 1768280843142,
       "tag": "0001_strange_patch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768455586403,
+      "tag": "0002_busy_spacker_dave",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768462636654,
+      "tag": "0003_true_dracula",
+      "breakpoints": true
     }
   ]
 }

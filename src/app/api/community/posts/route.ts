@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const keyword = searchParams.get('keyword'); // 模糊搜索关键词
     const offset = (page - 1) * limit;
 
-    let whereConditions: any[] = [eq(posts.status, 'active')];
+    const whereConditions: any[] = [eq(posts.status, 'active')];
     if (type) whereConditions.push(eq(posts.type, type));
     if (topicId) whereConditions.push(eq(posts.topicId, parseInt(topicId)));
     if (userId) whereConditions.push(eq(posts.userId, parseInt(userId)));
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     const postList = await db.query.posts.findMany({
-      where: and(...whereConditions),
+      where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
       orderBy: [desc(posts.isPinned), desc(posts.createdAt)],
       limit,
       offset,
@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
     });
 
     // Add isLiked status for each post if user is logged in
-    let postsWithLikeStatus = postList;
+    let postsWithLikeStatus: any[] = postList;
     if (user) {
       const userLikes = await db.query.likes.findMany({
         where: and(eq(likes.userId, user.id), eq(likes.targetType, 'post'))
       });
-      const likedPostIds = new Set(userLikes.map((l) => l.targetId));
-      postsWithLikeStatus = postList.map((post) => ({
+      const likedPostIds = new Set(userLikes.map((l: any) => l.targetId));
+      postsWithLikeStatus = postList.map((post: any) => ({
         ...post,
         isLiked: likedPostIds.has(post.id)
       }));

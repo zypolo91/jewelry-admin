@@ -394,6 +394,7 @@ export const posts = mysqlTable('posts', {
   likeCount: int('like_count').default(0),
   commentCount: int('comment_count').default(0),
   shareCount: int('share_count').default(0),
+  favoriteCount: int('favorite_count').default(0),
   isPinned: boolean('is_pinned').default(false),
   status: varchar('status', { length: 20 }).default('active'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -429,12 +430,21 @@ export const follows = mysqlTable('follows', {
   createdAt: timestamp('created_at').defaultNow()
 });
 
+// 收藏表
+export const favorites = mysqlTable('favorites', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  postId: int('post_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
 // 私信表
 export const messages = mysqlTable('messages', {
   id: int('id').primaryKey().autoincrement(),
   senderId: int('sender_id').notNull(),
   receiverId: int('receiver_id').notNull(),
   content: text('content').notNull(),
+  type: varchar('type', { length: 20 }).default('text'),
   isRead: boolean('is_read').default(false),
   createdAt: timestamp('created_at').defaultNow()
 });
@@ -518,6 +528,23 @@ export const dailyCheckins = mysqlTable('daily_checkins', {
   createdAt: timestamp('created_at').defaultNow()
 });
 
+// 用户拉黑表
+export const blocks = mysqlTable('blocks', {
+  id: int('id').primaryKey().autoincrement(),
+  blockerId: int('blocker_id').notNull(),
+  blockedId: int('blocked_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 搜索关键词统计表
+export const searchKeywords = mysqlTable('search_keywords', {
+  id: int('id').primaryKey().autoincrement(),
+  keyword: varchar('keyword', { length: 100 }).notNull().unique(),
+  searchCount: int('search_count').default(1),
+  lastSearchedAt: timestamp('last_searched_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
 // ==================== V2.0 表关系 ====================
 
 export const achievementsRelations = relations(achievements, ({ many }) => ({
@@ -571,7 +598,32 @@ export const topicsRelations = relations(topics, ({ many }) => ({
 export const postsRelations = relations(posts, ({ one, many }) => ({
   user: one(users, { fields: [posts.userId], references: [users.id] }),
   topic: one(topics, { fields: [posts.topicId], references: [topics.id] }),
-  comments: many(comments)
+  comments: many(comments),
+  favorites: many(favorites)
+}));
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, { fields: [favorites.userId], references: [users.id] }),
+  post: one(posts, { fields: [favorites.postId], references: [posts.id] })
+}));
+
+export const followsRelations = relations(follows, ({ one }) => ({
+  follower: one(users, {
+    fields: [follows.followerId],
+    references: [users.id]
+  }),
+  following: one(users, {
+    fields: [follows.followingId],
+    references: [users.id]
+  })
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, { fields: [messages.senderId], references: [users.id] }),
+  receiver: one(users, {
+    fields: [messages.receiverId],
+    references: [users.id]
+  })
 }));
 
 export const commentsRelations = relations(comments, ({ one }) => ({
@@ -606,4 +658,9 @@ export const userThemesRelations = relations(userThemes, ({ one }) => ({
 
 export const userSettingsRelations = relations(userSettings, ({ one }) => ({
   user: one(users, { fields: [userSettings.userId], references: [users.id] })
+}));
+
+export const blocksRelations = relations(blocks, ({ one }) => ({
+  blocker: one(users, { fields: [blocks.blockerId], references: [users.id] }),
+  blocked: one(users, { fields: [blocks.blockedId], references: [users.id] })
 }));
