@@ -80,10 +80,10 @@ export async function GET(
         .where(
           and(eq(likes.userId, currentUser.id), eq(likes.targetType, 'post'))
         );
-      likedPostIds = likesResult.map((l) => l.targetId);
+      likedPostIds = likesResult.map((l: { targetId: number }) => l.targetId);
     }
 
-    const data = postsResult.map((post) => ({
+    const data = postsResult.map((post: (typeof postsResult)[number]) => ({
       ...post,
       images: post.images || [],
       isLiked: likedPostIds.includes(post.id)
