@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: favoriteList.map((f: any) => f.post).filter(Boolean),
+      data: favoriteList
+        .map((f: any) => f.post)
+        .filter((post: any) => post && post.status === 'active'),
       pagination: { page, limit, total: total[0]?.count || 0 }
     });
   } catch (error: any) {
