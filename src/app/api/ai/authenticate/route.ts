@@ -4,6 +4,7 @@ import { aiAuthentications, aiQuotas } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { zhipuAIService } from '@/service/zhipu-ai.service';
 import { getCurrentUser } from '@/lib/auth';
+import { AchievementService } from '@/service/achievement.service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,6 +63,12 @@ export async function POST(request: NextRequest) {
         .where(eq(aiQuotas.id, quota.id));
     }
 
+    // 触发成就检查
+    const unlockedAchievements = await AchievementService.checkAndUnlock({
+      type: 'ai_auth',
+      userId: user.id
+    });
+
     const quotaRemaining = quota
       ? quota.totalQuota - (quota.usedQuota || 0) - 1
       : 999;
@@ -69,7 +76,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { id: authentication.id, ...result },
-      quotaRemaining
+      quotaRemaining,
+      unlockedAchievements: unlockedAchievements.map((a) => ({
+        id: a.id,
+        name: a.name,
+        points: a.points
+      }))
     });
   } catch (error: any) {
     console.error('AI鉴定失败:', error);

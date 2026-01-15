@@ -88,6 +88,7 @@ class ZhipuAIService {
   private apiKey: string;
   private apiUrl: string;
   private model: string;
+  private visionModel: string;
 
   constructor() {
     this.apiKey = process.env.ZHIPU_API_KEY || '';
@@ -95,6 +96,7 @@ class ZhipuAIService {
       process.env.ZHIPU_API_URL ||
       'https://open.bigmodel.cn/api/paas/v4/chat/completions';
     this.model = process.env.ZHIPU_MODEL || 'glm-4-flash';
+    this.visionModel = process.env.ZHIPU_VISION_MODEL || 'glm-4v-flash';
   }
 
   private async callAPI(request: ZhipuChatRequest): Promise<ZhipuChatResponse> {
@@ -163,7 +165,7 @@ class ZhipuAIService {
     ];
 
     const response = await this.callAPI({
-      model: this.model,
+      model: this.visionModel,
       messages,
       temperature: 0.3,
       max_tokens: 2000
@@ -243,7 +245,7 @@ class ZhipuAIService {
     ];
 
     const response = await this.callAPI({
-      model: this.model,
+      model: this.visionModel,
       messages,
       temperature: 0.2,
       max_tokens: 2000

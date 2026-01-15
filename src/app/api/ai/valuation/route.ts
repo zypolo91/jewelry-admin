@@ -4,6 +4,7 @@ import { aiValuations, aiQuotas } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { zhipuAIService } from '@/service/zhipu-ai.service';
 import { getCurrentUser } from '@/lib/auth';
+import { AchievementService } from '@/service/achievement.service';
 
 /**
  * AI估价接口
@@ -78,6 +79,12 @@ export async function POST(request: NextRequest) {
         .where(eq(aiQuotas.id, quota.id));
     }
 
+    // 触发成就检查
+    const unlockedAchievements = await AchievementService.checkAndUnlock({
+      type: 'ai_valuation',
+      userId: user.id
+    });
+
     const quotaRemaining = quota
       ? quota.totalQuota - (quota.usedQuota || 0) - 1
       : 999;
@@ -88,7 +95,12 @@ export async function POST(request: NextRequest) {
         id: valuation.id,
         ...result
       },
-      quotaRemaining
+      quotaRemaining,
+      unlockedAchievements: unlockedAchievements.map((a) => ({
+        id: a.id,
+        name: a.name,
+        points: a.points
+      }))
     });
   } catch (error: any) {
     console.error('AI估价失败:', error);

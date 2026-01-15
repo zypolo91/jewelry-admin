@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { posts } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { posts, likes } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(
@@ -9,6 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = getCurrentUser(request);
     const { id } = await params;
     const postId = parseInt(id);
     const post = await db.query.posts.findFirst({
@@ -23,7 +24,20 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data: post });
+    // Check if user has liked this post
+    let isLiked = false;
+    if (user) {
+      const userLike = await db.query.likes.findFirst({
+        where: and(
+          eq(likes.userId, user.id),
+          eq(likes.targetType, 'post'),
+          eq(likes.targetId, postId)
+        )
+      });
+      isLiked = !!userLike;
+    }
+
+    return NextResponse.json({ success: true, data: { ...post, isLiked } });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },
