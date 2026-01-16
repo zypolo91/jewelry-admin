@@ -38,6 +38,15 @@ interface PostWithScore {
   recommendScore?: number;
 }
 
+interface ViewHistoryEntry {
+  postId: number | null;
+  viewDuration: number | null;
+}
+
+interface LikedPostEntry {
+  postId: number | null;
+}
+
 // 计算内容热度分数
 function calculateHotness(post: PostWithScore): number {
   const likeCount = post.likeCount || 0;
@@ -125,7 +134,7 @@ export async function GET(request: NextRequest) {
     const blockedUsers = (userPref?.blockedUsers as number[]) || [];
 
     // 获取用户的浏览历史，分析兴趣偏好
-    const viewHistory = await db
+    const viewHistory: ViewHistoryEntry[] = await db
       .select({
         postId: userViewHistory.postId,
         viewDuration: userViewHistory.viewDuration
@@ -136,7 +145,7 @@ export async function GET(request: NextRequest) {
       .limit(100);
 
     // 获取用户点赞过的帖子
-    const likedPosts = await db
+    const likedPosts: LikedPostEntry[] = await db
       .select({ postId: likes.targetId })
       .from(likes)
       .where(and(eq(likes.userId, userId), eq(likes.targetType, 'post')))
