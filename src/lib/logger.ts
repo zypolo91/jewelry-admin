@@ -32,19 +32,26 @@ export async function createLog(data: LogData) {
 
     const requestId = uuidv4();
 
-    await db.insert(systemLogs).values({
-      level: data.level,
-      action: data.action,
-      module: data.module,
-      message: data.message,
-      details: data.details || null,
-      userId: data.userId || null,
-      userAgent,
-      ip,
-      requestId,
-      duration: data.duration || null
-    });
+    // 使用 Promise.race 添加超时保护
+    await Promise.race([
+      db.insert(systemLogs).values({
+        level: data.level,
+        action: data.action,
+        module: data.module,
+        message: data.message,
+        details: data.details || null,
+        userId: data.userId || null,
+        userAgent,
+        ip,
+        requestId,
+        duration: data.duration || null
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Log insert timeout')), 3000)
+      )
+    ]);
   } catch (error) {
+    // 日志失败不应阻塞主流程，仅打印到控制台
     console.error('Failed to create log:', error);
   }
 }

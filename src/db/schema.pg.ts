@@ -477,6 +477,8 @@ export const messages = pgTable('messages', {
   fileSize: integer('file_size'), // 文件大小(bytes)
   collectionId: integer('collection_id'), // 藏品ID
   isDeleted: boolean('is_deleted').default(false), // 软删除
+  isRecalled: boolean('is_recalled').default(false), // 是否撤回
+  recalledAt: timestamp('recalled_at'), // 撤回时间
   createdAt: timestamp('created_at').defaultNow()
 });
 
@@ -575,6 +577,27 @@ export const searchKeywords = pgTable('search_keywords', {
   keyword: varchar('keyword', { length: 100 }).notNull().unique(),
   searchCount: integer('search_count').default(1),
   lastSearchedAt: timestamp('last_searched_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 用户偏好表（用于推荐算法和减少推送）
+export const userPreferences = pgTable('user_preferences', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().unique(),
+  reducedCategories: jsonb('reduced_categories').default([]),
+  reducedTopics: jsonb('reduced_topics').default([]),
+  blockedUsers: jsonb('blocked_users').default([]),
+  notInterestedPosts: jsonb('not_interested_posts').default([]),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+// 用户浏览历史表（用于推荐算法）
+export const userViewHistory = pgTable('user_view_history', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  postId: integer('post_id').notNull(),
+  viewDuration: integer('view_duration').default(0),
   createdAt: timestamp('created_at').defaultNow()
 });
 

@@ -75,3 +75,5 @@ export const userSettingsRelations = schema.userSettingsRelations as any;
 export const blocks = schema.blocks as any;
 export const searchKeywords = schema.searchKeywords as any;
 export const blocksRelations = schema.blocksRelations as any;
+export const userPreferences = schema.userPreferences as any;
+export const userViewHistory = schema.userViewHistory as any;

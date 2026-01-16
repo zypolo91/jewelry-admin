@@ -452,6 +452,8 @@ export const messages = mysqlTable('messages', {
   fileSize: int('file_size'), // 文件大小(bytes)
   collectionId: int('collection_id'), // 藏品ID
   isDeleted: boolean('is_deleted').default(false), // 软删除
+  isRecalled: boolean('is_recalled').default(false), // 是否撤回
+  recalledAt: timestamp('recalled_at'), // 撤回时间
   createdAt: timestamp('created_at').defaultNow()
 });
 
@@ -548,6 +550,27 @@ export const searchKeywords = mysqlTable('search_keywords', {
   keyword: varchar('keyword', { length: 100 }).notNull().unique(),
   searchCount: int('search_count').default(1),
   lastSearchedAt: timestamp('last_searched_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 用户偏好表（用于推荐算法和减少推送）
+export const userPreferences = mysqlTable('user_preferences', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull().unique(),
+  reducedCategories: json('reduced_categories').default([]),
+  reducedTopics: json('reduced_topics').default([]),
+  blockedUsers: json('blocked_users').default([]),
+  notInterestedPosts: json('not_interested_posts').default([]),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+// 用户浏览历史表（用于推荐算法）
+export const userViewHistory = mysqlTable('user_view_history', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(),
+  postId: int('post_id').notNull(),
+  viewDuration: int('view_duration').default(0),
   createdAt: timestamp('created_at').defaultNow()
 });
 

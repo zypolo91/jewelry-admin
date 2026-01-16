@@ -18,15 +18,13 @@ function createDb() {
       process.env.DATABASE_URL
         ? {
             connectionString: process.env.DATABASE_URL,
-            ssl:
-              process.env.NODE_ENV === 'production'
-                ? { rejectUnauthorized: false }
-                : undefined,
-            max: 20,
+            ssl: false,
+            max: 10, // Balanced for Supabase Pooler
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 10000,
             keepAlive: true,
-            keepAliveInitialDelayMillis: 10000
+            keepAliveInitialDelayMillis: 10000,
+            allowExitOnIdle: false // Keep pool alive
           }
         : {
             host: process.env.DATABASE_HOST || '127.0.0.1',
