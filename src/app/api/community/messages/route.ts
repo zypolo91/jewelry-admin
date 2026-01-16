@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { messages, users } from '@/db/schema';
-import { eq, and, or, desc, sql } from 'drizzle-orm';
+import { messages, users, jewelries } from '@/db/schema';
+import { eq, and, or, desc, sql, ne } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth';
 
 // 获取私信对话列表或特定对话的消息
@@ -18,13 +18,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const chatUserId = searchParams.get('userId');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
+    const sinceId = searchParams.get('sinceId'); // 用于轮询获取新消息
 
     if (chatUserId) {
-      // 获取与特定用户的对话消息
-      const messageList = await db.query.messages.findMany({
-        where: or(
+      // 获取与特定用户的对话消息（排除已删除的消息）
+      let whereCondition = and(
+        or(
           and(
             eq(messages.senderId, user.id),
             eq(messages.receiverId, parseInt(chatUserId))
@@ -34,6 +35,24 @@ export async function GET(request: NextRequest) {
             eq(messages.receiverId, user.id)
           )
         ),
+        eq(messages.isDeleted, false)
+      );
+
+      // 如果提供了sinceId，只获取比该ID新的消息
+      if (sinceId) {
+        const messageList = await db
+          .select()
+          .from(messages)
+          .where(
+            and(whereCondition, sql`${messages.id} > ${parseInt(sinceId)}`)
+          )
+          .orderBy(messages.createdAt);
+
+        return NextResponse.json({ success: true, data: messageList });
+      }
+
+      const messageList = await db.query.messages.findMany({
+        where: whereCondition,
         orderBy: [desc(messages.createdAt)],
         limit,
         offset,
@@ -56,23 +75,24 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ success: true, data: messageList.reverse() });
     } else {
-      // 获取对话列表（每个对话显示最后一条消息）
+      // 获取对话列表（每个对话显示最后一条消息，排除已删除消息）
       const conversations = await db.execute(sql`
         WITH latest_messages AS (
           SELECT 
             CASE WHEN sender_id = ${user.id} THEN receiver_id ELSE sender_id END as chat_user_id,
             MAX(created_at) as last_message_time
           FROM messages
-          WHERE sender_id = ${user.id} OR receiver_id = ${user.id}
+          WHERE (sender_id = ${user.id} OR receiver_id = ${user.id}) AND is_deleted = false
           GROUP BY chat_user_id
         )
         SELECT 
           lm.chat_user_id,
           lm.last_message_time,
           m.content as last_message,
+          m.type as last_message_type,
           u.username,
           u.avatar,
-          (SELECT COUNT(*) FROM messages WHERE sender_id = lm.chat_user_id AND receiver_id = ${user.id} AND is_read = false) as unread_count,
+          (SELECT COUNT(*) FROM messages WHERE sender_id = lm.chat_user_id AND receiver_id = ${user.id} AND is_read = false AND is_deleted = false) as unread_count,
           CASE 
             WHEN EXISTS (
               SELECT 1 FROM follows f1
@@ -85,7 +105,7 @@ export async function GET(request: NextRequest) {
         JOIN messages m ON (
           (m.sender_id = ${user.id} AND m.receiver_id = lm.chat_user_id) OR
           (m.sender_id = lm.chat_user_id AND m.receiver_id = ${user.id})
-        ) AND m.created_at = lm.last_message_time
+        ) AND m.created_at = lm.last_message_time AND m.is_deleted = false
         JOIN users u ON u.id = lm.chat_user_id
         ORDER BY lm.last_message_time DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -102,7 +122,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 发送私信
+// 发送私信（支持多种消息类型）
 export async function POST(request: NextRequest) {
   try {
     const user = getCurrentUser(request);
@@ -113,11 +133,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { receiverId, content } = await request.json();
+    const body = await request.json();
+    const {
+      receiverId,
+      content,
+      type = 'text',
+      fileUrl,
+      fileName,
+      fileSize,
+      collectionId,
+      replyToId
+    } = body;
 
-    if (!receiverId || !content?.trim()) {
+    if (!receiverId) {
       return NextResponse.json(
-        { success: false, message: '参数不完整' },
+        { success: false, message: '接收者ID不能为空' },
+        { status: 400 }
+      );
+    }
+
+    // 验证消息类型
+    const validTypes = [
+      'text',
+      'image',
+      'emoji',
+      'file',
+      'collection',
+      'poke',
+      'quote'
+    ];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { success: false, message: '无效的消息类型' },
+        { status: 400 }
+      );
+    }
+
+    // 根据消息类型验证必要字段
+    if (type === 'text' && !content?.trim()) {
+      return NextResponse.json(
+        { success: false, message: '消息内容不能为空' },
+        { status: 400 }
+      );
+    }
+
+    if ((type === 'image' || type === 'file') && !fileUrl) {
+      return NextResponse.json(
+        { success: false, message: '文件URL不能为空' },
+        { status: 400 }
+      );
+    }
+
+    if (type === 'file' && fileSize && fileSize > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { success: false, message: '文件大小不能超过5MB' },
+        { status: 400 }
+      );
+    }
+
+    if (type === 'collection' && !collectionId) {
+      return NextResponse.json(
+        { success: false, message: '藏品ID不能为空' },
+        { status: 400 }
+      );
+    }
+
+    if (type === 'quote' && !replyToId) {
+      return NextResponse.json(
+        { success: false, message: '引用消息ID不能为空' },
         { status: 400 }
       );
     }
@@ -129,20 +212,113 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 生成消息内容
+    let messageContent = content?.trim() || '';
+    if (type === 'poke') {
+      messageContent = '拍了拍你';
+    } else if (type === 'image') {
+      messageContent = messageContent || '[图片]';
+    } else if (type === 'file') {
+      messageContent = messageContent || `[文件] ${fileName || '未知文件'}`;
+    } else if (type === 'collection') {
+      // 获取藏品信息
+      const [jewelry] = await db
+        .select({ name: jewelries.name })
+        .from(jewelries)
+        .where(eq(jewelries.id, collectionId))
+        .limit(1);
+      messageContent =
+        messageContent || `[藏品] ${jewelry?.name || '未知藏品'}`;
+    }
+
     const [message] = await db
       .insert(messages)
       .values({
         senderId: user.id,
         receiverId,
-        content: content.trim(),
-        type: 'text',
-        isRead: false
+        content: messageContent,
+        type,
+        isRead: false,
+        fileUrl: fileUrl || null,
+        fileName: fileName || null,
+        fileSize: fileSize || null,
+        collectionId: collectionId || null,
+        replyToId: replyToId || null,
+        isDeleted: false
       })
       .returning();
 
-    return NextResponse.json({ success: true, data: message });
+    // 获取完整消息信息（包含发送者信息）
+    const [sender] = await db
+      .select({ id: users.id, username: users.username, avatar: users.avatar })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+
+    return NextResponse.json({
+      success: true,
+      data: { ...message, sender }
+    });
   } catch (error: any) {
     console.error('发送消息失败:', error);
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// 删除消息
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = getCurrentUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: '未授权' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const messageId = searchParams.get('messageId');
+
+    if (!messageId) {
+      return NextResponse.json(
+        { success: false, message: '消息ID不能为空' },
+        { status: 400 }
+      );
+    }
+
+    // 检查消息是否存在且是否有权限删除（只能删除自己发送的消息）
+    const [existingMessage] = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.id, parseInt(messageId)))
+      .limit(1);
+
+    if (!existingMessage) {
+      return NextResponse.json(
+        { success: false, message: '消息不存在' },
+        { status: 404 }
+      );
+    }
+
+    if (existingMessage.senderId !== user.id) {
+      return NextResponse.json(
+        { success: false, message: '无权删除此消息' },
+        { status: 403 }
+      );
+    }
+
+    // 软删除消息
+    await db
+      .update(messages)
+      .set({ isDeleted: true })
+      .where(eq(messages.id, parseInt(messageId)));
+
+    return NextResponse.json({ success: true, message: '删除成功' });
+  } catch (error: any) {
+    console.error('删除消息失败:', error);
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

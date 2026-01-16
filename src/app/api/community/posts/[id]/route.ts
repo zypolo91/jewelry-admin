@@ -24,6 +24,11 @@ export async function GET(
       );
     }
 
+    // 过滤掉已删除的评论
+    const activeComments =
+      post.comments?.filter((comment: any) => comment.status !== 'deleted') ||
+      [];
+
     // Check if user has liked this post
     let isLiked = false;
     if (user) {
@@ -37,7 +42,10 @@ export async function GET(
       isLiked = !!userLike;
     }
 
-    return NextResponse.json({ success: true, data: { ...post, isLiked } });
+    return NextResponse.json({
+      success: true,
+      data: { ...post, comments: activeComments, isLiked }
+    });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message },

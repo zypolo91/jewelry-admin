@@ -469,8 +469,14 @@ export const messages = pgTable('messages', {
   senderId: integer('sender_id').notNull(),
   receiverId: integer('receiver_id').notNull(),
   content: text('content').notNull(),
-  type: varchar('type', { length: 20 }).default('text'),
+  type: varchar('type', { length: 20 }).default('text'), // text, image, emoji, file, collection, poke, quote
   isRead: boolean('is_read').default(false),
+  replyToId: integer('reply_to_id'), // 引用消息ID
+  fileUrl: varchar('file_url', { length: 500 }), // 文件/图片URL
+  fileName: varchar('file_name', { length: 255 }), // 文件名
+  fileSize: integer('file_size'), // 文件大小(bytes)
+  collectionId: integer('collection_id'), // 藏品ID
+  isDeleted: boolean('is_deleted').default(false), // 软删除
   createdAt: timestamp('created_at').defaultNow()
 });
 
