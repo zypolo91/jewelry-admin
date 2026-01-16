@@ -7,7 +7,7 @@ import { getCurrentUser } from '@/lib/auth';
 // 撤回消息（3分钟内可撤回）
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -18,7 +18,8 @@ export async function POST(
       );
     }
 
-    const messageId = parseInt(params.id);
+    const { id } = await params;
+    const messageId = parseInt(id);
     if (isNaN(messageId)) {
       return NextResponse.json(
         { success: false, message: '无效的消息ID' },
