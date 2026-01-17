@@ -19,6 +19,7 @@ export const users = pgTable('users', {
   username: varchar('username', { length: 50 }).notNull(),
   password: varchar('password', { length: 255 }).notNull(),
   avatar: varchar('avatar', { length: 255 }).default('/avatars/default.jpg'),
+  mobile: varchar('mobile', { length: 20 }), // 手机号
   roleId: integer('role_id').notNull(),
   isSuperAdmin: boolean('is_super_admin').default(false),
   status: varchar('status', { length: 20 }).default('active'), // active, disabled

@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { image, prompt } = body;
 
-    if (!image) {
+    if (!image && !prompt) {
       return NextResponse.json(
-        { success: false, message: '请上传图片' },
+        { success: false, message: '请上传图片或输入设计描述' },
         { status: 400 }
       );
     }

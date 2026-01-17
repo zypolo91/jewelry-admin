@@ -33,8 +33,12 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 // 构建查询参数
-export function buildSearchParams(params: Record<string, any>): string {
+export function buildSearchParams(params?: Record<string, any> | null): string {
   const searchParams = new URLSearchParams();
+
+  if (!params || typeof params !== 'object') {
+    return '';
+  }
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {

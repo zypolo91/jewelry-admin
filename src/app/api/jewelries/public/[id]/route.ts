@@ -30,7 +30,12 @@ export async function GET(
       coverImage: jewelries.coverImage,
       images: jewelries.images,
       categoryName: jewelryCategories.name,
-      categoryIcon: jewelryCategories.icon
+      categoryIcon: jewelryCategories.icon,
+      purchasePrice: jewelries.purchasePrice,
+      currentValue: jewelries.currentValue,
+      specifications: jewelries.specifications,
+      qualityGrade: jewelries.qualityGrade,
+      status: jewelries.status
     })
     .from(jewelries)
     .leftJoin(jewelryCategories, eq(jewelries.categoryId, jewelryCategories.id))
@@ -41,11 +46,22 @@ export async function GET(
     return notFoundResponse('珠宝不存在');
   }
 
+  // 从 specifications 中提取材质信息
+  const specs = record.specifications as Record<string, string> | null;
+  const material =
+    specs?.['材质'] ?? specs?.['material'] ?? specs?.['主材质'] ?? null;
+
   return successResponse({
     id: record.id,
     name: record.name,
     image: record.coverImage || (record.images as string[])?.[0],
+    images: record.images,
     category: record.categoryName,
-    categoryIcon: record.categoryIcon
+    categoryIcon: record.categoryIcon,
+    price: record.purchasePrice,
+    currentValue: record.currentValue,
+    material: material,
+    qualityGrade: record.qualityGrade,
+    status: record.status
   });
 }

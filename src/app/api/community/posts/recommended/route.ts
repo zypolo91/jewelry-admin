@@ -115,6 +115,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
+    const typeFilter = searchParams.get('type'); // 分类筛选参数
 
     // 获取用户偏好（减少推送的分类）
     let userPref;
@@ -242,6 +243,8 @@ export async function GET(request: NextRequest) {
         and(
           eq(posts.status, 'active'),
           gte(posts.createdAt, thirtyDaysAgo),
+          // 如果指定了类型筛选，只返回该类型的帖子
+          typeFilter ? eq(posts.type, typeFilter) : undefined,
           excludeUserIds.length > 0
             ? notInArray(posts.userId, excludeUserIds)
             : undefined,

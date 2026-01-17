@@ -136,13 +136,14 @@ class OpenRouterAIService {
   }
 
   /**
-   * AI珠宝设计 - 根据图片和提示词生成设计方案
+   * AI珠宝设计 - 根据图片和提示词生成设计方案，支持纯文字设计
    */
-  async design(imageBase64: string, prompt: string): Promise<DesignResult> {
-    const systemPrompt = `你是一位专业的珠宝设计师和艺术顾问。用户会提供珠宝图片和设计需求，你需要：
-1. 分析图片中的珠宝风格、材质、工艺
+  async design(imageBase64?: string, prompt?: string): Promise<DesignResult> {
+    const systemPrompt = `你是一位专业的珠宝设计师和艺术顾问。用户可能提供珠宝图片和/或设计需求，你需要：
+1. 如果有图片：分析图片中的珠宝风格、材质、工艺
 2. 根据用户需求提供专业的设计建议
 3. 给出具体的设计方案和灵感来源
+4. 如果只有文字描述：基于描述创造性地设计珠宝方案
 
 请用JSON格式返回结果，包含以下字段：
 {
@@ -161,22 +162,31 @@ class OpenRouterAIService {
 注意：
 - 设计描述要详细、专业、有创意
 - 建议要具体可行
-- 如果图片不是珠宝相关，请礼貌说明并给出一般性设计建议`;
+- 支持纯文字创意设计`;
 
-    const userContent: OpenRouterContentPart[] = [
-      {
+    const userContent: OpenRouterContentPart[] = [];
+
+    // 如果有图片，添加图片内容
+    if (imageBase64) {
+      userContent.push({
         type: 'image_url',
         image_url: {
           url: imageBase64.startsWith('data:')
             ? imageBase64
             : `data:image/jpeg;base64,${imageBase64}`
         }
-      },
-      {
-        type: 'text',
-        text: prompt || '请分析这张珠宝图片，并给出设计建议和改进方案。'
-      }
-    ];
+      });
+    }
+
+    // 添加文字内容
+    userContent.push({
+      type: 'text',
+      text:
+        prompt ||
+        (imageBase64
+          ? '请分析这张珠宝图片，并给出设计建议和改进方案。'
+          : '请为我设计一款珠宝，给出创意设计方案。')
+    });
 
     const messages: OpenRouterMessage[] = [
       { role: 'system', content: systemPrompt },

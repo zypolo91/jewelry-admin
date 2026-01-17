@@ -55,19 +55,38 @@ export async function PUT(request: NextRequest) {
   if (!user) return unauthorizedResponse();
 
   try {
-    const body = await request.json();
+    const contentType = request.headers.get('content-type') || '';
 
-    // 确保body不为空
-    if (!body || typeof body !== 'object') {
-      return errorResponse('请求数据格式错误');
+    let body: any;
+    if (contentType.includes('application/json')) {
+      try {
+        body = await request.json();
+      } catch {
+        return errorResponse('请求数据格式错误');
+      }
+    } else if (contentType.includes('multipart/form-data')) {
+      const form = await request.formData();
+      body = Object.fromEntries(form.entries());
+    } else {
+      try {
+        body = await request.json();
+      } catch {
+        body = null;
+      }
     }
 
-    const { username, avatar, mobile } = body;
+    if (!body || typeof body !== 'object')
+      return errorResponse('请求数据格式错误');
+
+    const { username, nickname, avatar, mobile } = body;
 
     const updateData: Record<string, any> = {};
-    if (username !== undefined && username !== null)
-      updateData.username = username;
-    if (avatar !== undefined && avatar !== null) updateData.avatar = avatar;
+    // 支持 nickname 和 username 两个字段名，优先使用 nickname
+    const displayName = nickname ?? username;
+    if (displayName !== undefined && displayName !== null && displayName !== '')
+      updateData.username = displayName;
+    if (avatar !== undefined && avatar !== null && avatar !== '')
+      updateData.avatar = avatar;
     if (mobile !== undefined && mobile !== null) updateData.mobile = mobile;
 
     if (Object.keys(updateData).length === 0) {
@@ -87,6 +106,10 @@ export async function PUT(request: NextRequest) {
       .from(users)
       .where(eq(users.id, user.id))
       .limit(1);
+
+    if (!updatedUser) {
+      return errorResponse('用户不存在');
+    }
 
     return successResponse({
       id: updatedUser.id,
