@@ -693,3 +693,72 @@ export const blocksRelations = relations(blocks, ({ one }) => ({
   blocker: one(users, { fields: [blocks.blockerId], references: [users.id] }),
   blocked: one(users, { fields: [blocks.blockedId], references: [users.id] })
 }));
+
+// ==================== 证书机构相关表 ====================
+
+// 证书鉴定机构表
+export const certInstitutions = mysqlTable('cert_institutions', {
+  id: int('id').primaryKey().autoincrement(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 100 }).notNull(),
+  fullName: varchar('full_name', { length: 255 }),
+  country: varchar('country', { length: 50 }),
+  region: varchar('region', { length: 50 }),
+  logo: varchar('logo', { length: 500 }),
+  website: varchar('website', { length: 255 }),
+  verifyUrl: varchar('verify_url', { length: 500 }),
+  description: text('description'),
+  features: json('features'),
+  certTypes: json('cert_types'),
+  sampleImages: json('sample_images'),
+  recognitionFeatures: json('recognition_features'),
+  authority: int('authority').default(5),
+  isActive: boolean('is_active').default(true),
+  sortOrder: int('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 证书知识库表
+export const certKnowledge = mysqlTable('cert_knowledge', {
+  id: int('id').primaryKey().autoincrement(),
+  category: varchar('category', { length: 50 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  summary: text('summary'),
+  content: text('content').notNull(),
+  tags: json('tags'),
+  images: json('images'),
+  relatedInstitutions: json('related_institutions'),
+  viewCount: int('view_count').default(0),
+  isPublished: boolean('is_published').default(true),
+  sortOrder: int('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 证书验证记录表
+export const certVerifications = mysqlTable('cert_verifications', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id'),
+  institutionId: int('institution_id'),
+  certNumber: varchar('cert_number', { length: 100 }).notNull(),
+  verifyResult: varchar('verify_result', { length: 20 }),
+  resultData: json('result_data'),
+  imageUrl: varchar('image_url', { length: 500 }),
+  aiAnalysis: text('ai_analysis'),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 证书图像特征表
+export const certImageFeatures = mysqlTable('cert_image_features', {
+  id: int('id').primaryKey().autoincrement(),
+  institutionId: int('institution_id').notNull(),
+  featureType: varchar('feature_type', { length: 50 }).notNull(),
+  featureName: varchar('feature_name', { length: 100 }).notNull(),
+  description: text('description'),
+  sampleImage: varchar('sample_image', { length: 500 }),
+  position: json('position'),
+  colorPattern: json('color_pattern'),
+  isRequired: boolean('is_required').default(true),
+  createdAt: timestamp('created_at').defaultNow()
+});

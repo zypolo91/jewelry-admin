@@ -721,3 +721,76 @@ export const blocksRelations = relations(blocks, ({ one }) => ({
   blocker: one(users, { fields: [blocks.blockerId], references: [users.id] }),
   blocked: one(users, { fields: [blocks.blockedId], references: [users.id] })
 }));
+
+// ==================== 证书机构相关表 ====================
+
+// 证书鉴定机构表
+export const certInstitutions = pgTable('cert_institutions', {
+  id: serial('id').primaryKey(),
+  code: varchar('code', { length: 50 }).notNull().unique(), // GIA, NGTC, HRD等
+  name: varchar('name', { length: 100 }).notNull(),
+  fullName: varchar('full_name', { length: 255 }), // 全称
+  country: varchar('country', { length: 50 }), // 所属国家
+  region: varchar('region', { length: 50 }), // 地区分类: international, china, europe, usa
+  logo: varchar('logo', { length: 500 }), // Logo图片URL
+  website: varchar('website', { length: 255 }), // 官网
+  verifyUrl: varchar('verify_url', { length: 500 }), // 证书查询URL
+  description: text('description'), // 机构简介
+  features: jsonb('features'), // 特色服务 [{name, description}]
+  certTypes: jsonb('cert_types'), // 证书类型 [{code, name, description}]
+  sampleImages: jsonb('sample_images'), // 证书样本图片 [url1, url2]
+  recognitionFeatures: jsonb('recognition_features'), // 识别特征 {watermark, qrCode, hologram, ...}
+  authority: integer('authority').default(5), // 权威度评分 1-10
+  isActive: boolean('is_active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+});
+
+// 证书知识库表
+export const certKnowledge = pgTable('cert_knowledge', {
+  id: serial('id').primaryKey(),
+  category: varchar('category', { length: 50 }).notNull(), // basics, identification, faq
+  title: varchar('title', { length: 200 }).notNull(),
+  summary: text('summary'), // 摘要
+  content: text('content').notNull(), // Markdown内容
+  tags: jsonb('tags'), // 标签 [tag1, tag2]
+  images: jsonb('images'), // 配图 [url1, url2]
+  relatedInstitutions: jsonb('related_institutions'), // 相关机构代码 [GIA, NGTC]
+  viewCount: integer('view_count').default(0),
+  isPublished: boolean('is_published').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+});
+
+// 证书验证记录表
+export const certVerifications = pgTable('cert_verifications', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id'),
+  institutionId: integer('institution_id'),
+  certNumber: varchar('cert_number', { length: 100 }).notNull(),
+  verifyResult: varchar('verify_result', { length: 20 }), // valid, invalid, pending, error
+  resultData: jsonb('result_data'), // 查询返回的数据
+  imageUrl: varchar('image_url', { length: 500 }), // 用户上传的证书图片
+  aiAnalysis: text('ai_analysis'), // AI解读结果
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 证书图像特征表（用于AI识别）
+export const certImageFeatures = pgTable('cert_image_features', {
+  id: serial('id').primaryKey(),
+  institutionId: integer('institution_id').notNull(),
+  featureType: varchar('feature_type', { length: 50 }).notNull(), // logo, watermark, hologram, qrcode, layout
+  featureName: varchar('feature_name', { length: 100 }).notNull(),
+  description: text('description'),
+  sampleImage: varchar('sample_image', { length: 500 }),
+  position: jsonb('position'), // 特征在证书上的位置 {x, y, width, height}
+  colorPattern: jsonb('color_pattern'), // 颜色特征
+  isRequired: boolean('is_required').default(true), // 是否必须存在
+  createdAt: timestamp('created_at').defaultNow()
+});

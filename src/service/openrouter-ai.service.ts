@@ -106,7 +106,7 @@ class OpenRouterAIService {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.apiKey}`,
         'HTTP-Referer': 'https://hebaobao.jewelry',
-        'X-Title': '何宝宝的百宝箱'
+        'X-Title': 'Hebaobao Jewelry Box'
       },
       body: JSON.stringify(requestBody)
     });

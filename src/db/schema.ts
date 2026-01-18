@@ -77,3 +77,9 @@ export const searchKeywords = schema.searchKeywords as any;
 export const blocksRelations = schema.blocksRelations as any;
 export const userPreferences = schema.userPreferences as any;
 export const userViewHistory = schema.userViewHistory as any;
+
+// 证书机构相关表
+export const certInstitutions = schema.certInstitutions as any;
+export const certKnowledge = schema.certKnowledge as any;
+export const certVerifications = schema.certVerifications as any;
+export const certImageFeatures = schema.certImageFeatures as any;
