@@ -83,3 +83,8 @@ export const certInstitutions = schema.certInstitutions as any;
 export const certKnowledge = schema.certKnowledge as any;
 export const certVerifications = schema.certVerifications as any;
 export const certImageFeatures = schema.certImageFeatures as any;
+
+// 图片标签表
+export const jewelryImageTags = schema.jewelryImageTags as any;
+export const jewelryImageTagsRelations =
+  schema.jewelryImageTagsRelations as any;

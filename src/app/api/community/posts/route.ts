@@ -15,12 +15,18 @@ export async function GET(request: NextRequest) {
     const topicId = searchParams.get('topicId');
     const userId = searchParams.get('userId');
     const keyword = searchParams.get('keyword'); // 模糊搜索关键词
+    const mine = searchParams.get('mine'); // 只获取当前用户的帖子
     const offset = (page - 1) * limit;
 
     const whereConditions: any[] = [eq(posts.status, 'active')];
     if (type) whereConditions.push(eq(posts.type, type));
     if (topicId) whereConditions.push(eq(posts.topicId, parseInt(topicId)));
     if (userId) whereConditions.push(eq(posts.userId, parseInt(userId)));
+
+    // 如果mine=true，只获取当前登录用户的帖子
+    if (mine === 'true' && user) {
+      whereConditions.push(eq(posts.userId, user.id));
+    }
 
     // 模糊搜索：搜索内容
     if (keyword && keyword.trim()) {

@@ -798,3 +798,26 @@ export const certImageFeatures = pgTable('cert_image_features', {
   isRequired: boolean('is_required').default(true), // 是否必须存在
   createdAt: timestamp('created_at').defaultNow()
 });
+
+// 藏品图片标签表
+export const jewelryImageTags = pgTable('jewelry_image_tags', {
+  id: serial('id').primaryKey(),
+  jewelryId: integer('jewelry_id').notNull(),
+  imageUrl: varchar('image_url', { length: 500 }).notNull(),
+  tagIds: jsonb('tag_ids').$type<string[]>().notNull(), // 标签ID数组
+  note: text('note'), // 备注
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+});
+
+export const jewelryImageTagsRelations = relations(
+  jewelryImageTags,
+  ({ one }) => ({
+    jewelry: one(jewelries, {
+      fields: [jewelryImageTags.jewelryId],
+      references: [jewelries.id]
+    })
+  })
+);

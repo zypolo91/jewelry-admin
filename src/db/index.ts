@@ -19,12 +19,13 @@ function createDb() {
         ? {
             connectionString: process.env.DATABASE_URL,
             ssl: false,
-            max: 10, // Balanced for Supabase Pooler
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 10000,
+            max: 5, // Reduced for better stability
+            idleTimeoutMillis: 20000,
+            connectionTimeoutMillis: 15000,
             keepAlive: true,
-            keepAliveInitialDelayMillis: 10000,
-            allowExitOnIdle: false // Keep pool alive
+            keepAliveInitialDelayMillis: 5000,
+            allowExitOnIdle: false,
+            statement_timeout: 30000 // 30s query timeout
           }
         : {
             host: process.env.DATABASE_HOST || '127.0.0.1',
