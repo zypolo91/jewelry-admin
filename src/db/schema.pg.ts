@@ -738,8 +738,12 @@ export const certInstitutions = pgTable('cert_institutions', {
   description: text('description'), // 机构简介
   features: jsonb('features'), // 特色服务 [{name, description}]
   certTypes: jsonb('cert_types'), // 证书类型 [{code, name, description}]
+  pricing: jsonb('pricing'), // 价格信息 [{type, price, currency, description}]
+  certifications: jsonb('certifications'), // 机构认证 [CMA, CNAS, CAL]
+  branches: jsonb('branches'), // 分支机构 [{city, address, phone}]
   sampleImages: jsonb('sample_images'), // 证书样本图片 [url1, url2]
   recognitionFeatures: jsonb('recognition_features'), // 识别特征 {watermark, qrCode, hologram, ...}
+  avgProcessingDays: integer('avg_processing_days'), // 平均出证天数
   authority: integer('authority').default(5), // 权威度评分 1-10
   isActive: boolean('is_active').default(true),
   sortOrder: integer('sort_order').default(0),

@@ -709,10 +709,14 @@ export const certInstitutions = mysqlTable('cert_institutions', {
   verifyUrl: varchar('verify_url', { length: 500 }),
   description: text('description'),
   features: json('features'),
-  certTypes: json('cert_types'),
-  sampleImages: json('sample_images'),
-  recognitionFeatures: json('recognition_features'),
-  authority: int('authority').default(5),
+  certTypes: json('cert_types'), // 证书类型 [{code, name, description}]
+  pricing: json('pricing'), // 价格信息 [{type, price, currency, description}]
+  certifications: json('certifications'), // 机构认证 [CMA, CNAS, CAL]
+  branches: json('branches'), // 分支机构 [{city, address, phone}]
+  sampleImages: json('sample_images'), // 证书样本图片 [url1, url2]
+  recognitionFeatures: json('recognition_features'), // 识别特征 {watermark, qrCode, hologram, ...}
+  avgProcessingDays: int('avg_processing_days'), // 平均出证天数
+  authority: int('authority').default(5), // 权威度评分 1-10
   isActive: boolean('is_active').default(true),
   sortOrder: int('sort_order').default(0),
   createdAt: timestamp('created_at').defaultNow(),

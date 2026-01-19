@@ -8,7 +8,7 @@ import {
   certVerifications,
   certImageFeatures
 } from '@/db/schema';
-import { eq, like, desc, asc } from 'drizzle-orm';
+import { eq, like, desc, asc, or, ilike, and, sql } from 'drizzle-orm';
 
 // 备用静态数据（数据库无数据时使用）
 const fallbackInstitutions = [
@@ -294,20 +294,60 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
 
     if (type === 'institutions') {
-      // 从数据库获取机构列表
+      // 获取搜索和筛选参数
+      const keyword = searchParams.get('keyword');
+      const region = searchParams.get('region');
+      const certType = searchParams.get('certType');
+
       let institutions: any[] = [];
       try {
+        let query = db
+          .select()
+          .from(certInstitutions)
+          .where(eq(certInstitutions.isActive, true));
+
+        // 构建查询条件
+        const conditions: any[] = [eq(certInstitutions.isActive, true)];
+
+        // 关键词搜索（机构名称、代码、描述）
+        if (keyword) {
+          conditions.push(
+            or(
+              sql`${certInstitutions.code} ILIKE ${`%${keyword}%`}`,
+              sql`${certInstitutions.name} ILIKE ${`%${keyword}%`}`,
+              sql`${certInstitutions.fullName} ILIKE ${`%${keyword}%`}`,
+              sql`${certInstitutions.description} ILIKE ${`%${keyword}%`}`
+            )
+          );
+        }
+
+        // 按地区筛选
+        if (region) {
+          conditions.push(eq(certInstitutions.region, region));
+        }
+
         institutions = await db
           .select()
           .from(certInstitutions)
-          .where(eq(certInstitutions.isActive, true))
-          .orderBy(asc(certInstitutions.sortOrder));
+          .where(and(...conditions))
+          .orderBy(
+            desc(certInstitutions.authority),
+            asc(certInstitutions.sortOrder)
+          );
+
+        // 如果需要按证书类型筛选，在内存中过滤
+        if (certType && institutions.length > 0) {
+          institutions = institutions.filter((inst: any) => {
+            const types = inst.certTypes || [];
+            return types.some((t: any) => t.code === certType);
+          });
+        }
       } catch (e) {
         console.log('数据库查询失败，使用备用数据');
       }
 
       // 如果数据库没有数据，使用备用数据
-      if (institutions.length === 0) {
+      if (institutions.length === 0 && !keyword && !region) {
         institutions = fallbackInstitutions;
       }
 
@@ -329,9 +369,63 @@ export async function GET(request: NextRequest) {
           authority: inst.authority,
           region: inst.region,
           country: inst.country,
-          certTypes: inst.certTypes
-        }))
+          certTypes: inst.certTypes,
+          pricing: inst.pricing,
+          certifications: inst.certifications,
+          branches: inst.branches,
+          avgProcessingDays: inst.avgProcessingDays
+        })),
+        total: institutions.length,
+        filters: {
+          regions: ['china', 'international', 'europe', 'usa', 'asia'],
+          certTypes: ['diamond', 'jade', 'gemstone', 'pearl', 'gold']
+        }
       });
+    }
+
+    // 机构详情
+    if (type === 'institution-detail') {
+      const code = searchParams.get('code');
+      if (!code) {
+        return NextResponse.json(
+          { success: false, message: '请提供机构代码' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const [inst] = await db
+          .select()
+          .from(certInstitutions)
+          .where(eq(certInstitutions.code, code.toUpperCase()))
+          .limit(1);
+
+        if (!inst) {
+          return NextResponse.json(
+            { success: false, message: '机构不存在' },
+            { status: 404 }
+          );
+        }
+
+        // 获取该机构的图像识别特征
+        const features = await db
+          .select()
+          .from(certImageFeatures)
+          .where(eq(certImageFeatures.institutionId, inst.id));
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            ...inst,
+            imageFeatures: features
+          }
+        });
+      } catch (e) {
+        return NextResponse.json(
+          { success: false, message: '查询失败' },
+          { status: 500 }
+        );
+      }
     }
 
     if (type === 'knowledge') {
