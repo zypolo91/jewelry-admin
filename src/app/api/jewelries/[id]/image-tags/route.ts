@@ -7,7 +7,7 @@ import { getCurrentUser } from '@/lib/auth';
 // GET - 获取藏品的所有图片标签
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -18,7 +18,8 @@ export async function GET(
       );
     }
 
-    const jewelryId = parseInt(params.id);
+    const { id } = await params;
+    const jewelryId = parseInt(id);
 
     // 验证藏品所有权
     const jewelry = await db.query.jewelries.findFirst({
@@ -57,7 +58,7 @@ export async function GET(
 // POST - 保存图片标签
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -68,7 +69,8 @@ export async function POST(
       );
     }
 
-    const jewelryId = parseInt(params.id);
+    const { id } = await params;
+    const jewelryId = parseInt(id);
     const body = await request.json();
     const { imageUrl, tagIds, note } = body;
 
@@ -131,7 +133,7 @@ export async function POST(
 // PUT - 更新图片标签
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -142,7 +144,8 @@ export async function PUT(
       );
     }
 
-    const jewelryId = parseInt(params.id);
+    const { id } = await params;
+    const jewelryId = parseInt(id);
     const body = await request.json();
     const { imageUrl, tagIds, note } = body;
 
@@ -191,7 +194,7 @@ export async function PUT(
 // DELETE - 删除图片标签
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getCurrentUser(request);
@@ -202,7 +205,8 @@ export async function DELETE(
       );
     }
 
-    const jewelryId = parseInt(params.id);
+    const { id } = await params;
+    const jewelryId = parseInt(id);
     const { searchParams } = new URL(request.url);
     const imageUrl = searchParams.get('imageUrl');
 
