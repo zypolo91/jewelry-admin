@@ -217,6 +217,27 @@ export const jewelryValueHistoryRelations = relations(
   })
 );
 
+// 藏品图片标签表
+export const jewelryImageTags = mysqlTable('jewelry_image_tags', {
+  id: int('id').primaryKey().autoincrement(),
+  jewelryId: int('jewelry_id').notNull(),
+  imageUrl: varchar('image_url', { length: 500 }).notNull(),
+  tagIds: json('tag_ids').$type<string[]>().notNull(),
+  note: text('note'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+export const jewelryImageTagsRelations = relations(
+  jewelryImageTags,
+  ({ one }) => ({
+    jewelry: one(jewelries, {
+      fields: [jewelryImageTags.jewelryId],
+      references: [jewelries.id]
+    })
+  })
+);
+
 // VIP等级表
 export const vipLevels = mysqlTable('vip_levels', {
   id: int('id').primaryKey().autoincrement(),
