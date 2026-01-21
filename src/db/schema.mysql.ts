@@ -787,3 +787,79 @@ export const certImageFeatures = mysqlTable('cert_image_features', {
   isRequired: boolean('is_required').default(true),
   createdAt: timestamp('created_at').defaultNow()
 });
+
+// ==================== 直播间相关表 ====================
+
+// 直播间表
+export const liveRooms = mysqlTable('live_rooms', {
+  id: int('id').primaryKey().autoincrement(),
+  uniqueId: varchar('unique_id', { length: 100 }).notNull(),
+  userId: int('user_id').notNull(),
+  platform: varchar('platform', { length: 20 }).notNull(),
+  roomId: varchar('room_id', { length: 100 }).notNull(),
+  anchorName: varchar('anchor_name', { length: 100 }).notNull(),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  originalUrl: text('original_url'),
+  category: varchar('category', { length: 50 }),
+  note: text('note'),
+  notificationEnabled: boolean('notification_enabled').default(true),
+  sortOrder: int('sort_order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 直播状态缓存表
+export const liveStatusCache = mysqlTable('live_status_cache', {
+  id: int('id').primaryKey().autoincrement(),
+  liveRoomId: int('live_room_id').notNull(),
+  isLive: boolean('is_live').default(false),
+  startTime: timestamp('start_time'),
+  viewerCount: int('viewer_count'),
+  title: varchar('title', { length: 255 }),
+  coverUrl: varchar('cover_url', { length: 500 }),
+  lastCheckedAt: timestamp('last_checked_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+});
+
+// 直播历史记录表
+export const liveHistory = mysqlTable('live_history', {
+  id: int('id').primaryKey().autoincrement(),
+  liveRoomId: int('live_room_id').notNull(),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time'),
+  duration: int('duration'),
+  peakViewers: int('peak_viewers'),
+  title: varchar('title', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 直播间关系
+export const liveRoomsRelations = relations(liveRooms, ({ one, many }) => ({
+  user: one(users, {
+    fields: [liveRooms.userId],
+    references: [users.id]
+  }),
+  statusCache: one(liveStatusCache, {
+    fields: [liveRooms.id],
+    references: [liveStatusCache.liveRoomId]
+  }),
+  history: many(liveHistory)
+}));
+
+export const liveStatusCacheRelations = relations(
+  liveStatusCache,
+  ({ one }) => ({
+    liveRoom: one(liveRooms, {
+      fields: [liveStatusCache.liveRoomId],
+      references: [liveRooms.id]
+    })
+  })
+);
+
+export const liveHistoryRelations = relations(liveHistory, ({ one }) => ({
+  liveRoom: one(liveRooms, {
+    fields: [liveHistory.liveRoomId],
+    references: [liveRooms.id]
+  })
+}));
