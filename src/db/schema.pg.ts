@@ -821,3 +821,93 @@ export const jewelryImageTagsRelations = relations(
     })
   })
 );
+
+// ==================== 直播间相关表 ====================
+
+// 直播间表
+export const liveRooms = pgTable(
+  'live_rooms',
+  {
+    id: serial('id').primaryKey(),
+    uniqueId: varchar('unique_id', { length: 100 }).notNull(), // 客户端生成的UUID
+    userId: integer('user_id').notNull(), // 所属用户
+    platform: varchar('platform', { length: 20 }).notNull(), // douyin, taobao, xiaohongshu, kuaishou
+    roomId: varchar('room_id', { length: 100 }).notNull(), // 平台直播间ID
+    anchorName: varchar('anchor_name', { length: 100 }).notNull(), // 主播名称
+    avatarUrl: varchar('avatar_url', { length: 500 }), // 主播头像
+    originalUrl: text('original_url'), // 原始链接
+    category: varchar('category', { length: 50 }), // 分类: 翡翠、和田玉等
+    note: text('note'), // 用户备注
+    notificationEnabled: boolean('notification_enabled').default(true), // 是否开启通知
+    sortOrder: integer('sort_order').default(0), // 排序
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdateFn(() => new Date())
+  },
+  (t) => ({
+    userPlatformRoomUnique: uniqueIndex('user_platform_room_unique').on(
+      t.userId,
+      t.platform,
+      t.roomId
+    )
+  })
+);
+
+// 直播状态缓存表
+export const liveStatusCache = pgTable('live_status_cache', {
+  id: serial('id').primaryKey(),
+  liveRoomId: integer('live_room_id').notNull(), // 关联直播间
+  isLive: boolean('is_live').default(false), // 是否正在直播
+  startTime: timestamp('start_time'), // 开播时间
+  viewerCount: integer('viewer_count'), // 观看人数
+  title: varchar('title', { length: 255 }), // 直播标题
+  coverUrl: varchar('cover_url', { length: 500 }), // 封面图
+  lastCheckedAt: timestamp('last_checked_at').defaultNow(), // 最后检查时间
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+});
+
+// 直播历史记录表
+export const liveHistory = pgTable('live_history', {
+  id: serial('id').primaryKey(),
+  liveRoomId: integer('live_room_id').notNull(),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time'),
+  duration: integer('duration'), // 时长（秒）
+  peakViewers: integer('peak_viewers'), // 峰值观看人数
+  title: varchar('title', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// 直播间关系
+export const liveRoomsRelations = relations(liveRooms, ({ one, many }) => ({
+  user: one(users, {
+    fields: [liveRooms.userId],
+    references: [users.id]
+  }),
+  statusCache: one(liveStatusCache, {
+    fields: [liveRooms.id],
+    references: [liveStatusCache.liveRoomId]
+  }),
+  history: many(liveHistory)
+}));
+
+export const liveStatusCacheRelations = relations(
+  liveStatusCache,
+  ({ one }) => ({
+    liveRoom: one(liveRooms, {
+      fields: [liveStatusCache.liveRoomId],
+      references: [liveRooms.id]
+    })
+  })
+);
+
+export const liveHistoryRelations = relations(liveHistory, ({ one }) => ({
+  liveRoom: one(liveRooms, {
+    fields: [liveHistory.liveRoomId],
+    references: [liveRooms.id]
+  })
+}));

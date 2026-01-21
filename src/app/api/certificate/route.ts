@@ -9,6 +9,14 @@ import {
   certImageFeatures
 } from '@/db/schema';
 import { eq, like, desc, asc, or, ilike, and, sql } from 'drizzle-orm';
+import {
+  institutionsByProvince,
+  provinces,
+  getAllInstitutions,
+  getInstitutionsByProvince,
+  searchInstitutions as searchProvinceInstitutions,
+  getNationalInstitutions
+} from '@/scripts/seed-china-institutions-by-province';
 
 // 备用静态数据（数据库无数据时使用）
 const fallbackInstitutions = [
@@ -426,6 +434,66 @@ export async function GET(request: NextRequest) {
           { status: 500 }
         );
       }
+    }
+
+    // 按省份获取机构（新增）
+    if (type === 'provinces') {
+      return NextResponse.json({
+        success: true,
+        data: {
+          provinces: provinces,
+          total: provinces.length,
+          institutionsByProvince: Object.fromEntries(
+            provinces.map((p) => [p, getInstitutionsByProvince(p).length])
+          )
+        }
+      });
+    }
+
+    // 按省份获取机构列表（新增）
+    if (type === 'institutions-by-province') {
+      const province = searchParams.get('province');
+      const keyword = searchParams.get('keyword');
+
+      let results = province
+        ? getInstitutionsByProvince(province)
+        : getAllInstitutions();
+
+      // 关键词搜索
+      if (keyword) {
+        results = searchProvinceInstitutions(keyword);
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: results.map((inst) => ({
+          code: inst.code,
+          name: inst.name,
+          shortName: inst.shortName,
+          province: inst.province,
+          city: inst.city,
+          address: inst.address,
+          phone: inst.phone,
+          website: inst.website,
+          certTypes: inst.certTypes,
+          description: inst.description,
+          isNational: inst.isNational,
+          avgDays: inst.avgDays,
+          priceRange: inst.priceRange
+        })),
+        total: results.length,
+        provinces: provinces
+      });
+    }
+
+    // 获取国家级机构（新增）
+    if (type === 'national-institutions') {
+      const nationalInsts = getNationalInstitutions();
+      return NextResponse.json({
+        success: true,
+        data: nationalInsts,
+        total: nationalInsts.length
+      });
     }
 
     if (type === 'knowledge') {

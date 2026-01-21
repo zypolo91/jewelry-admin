@@ -88,3 +88,11 @@ export const certImageFeatures = schema.certImageFeatures as any;
 export const jewelryImageTags = schema.jewelryImageTags as any;
 export const jewelryImageTagsRelations =
   schema.jewelryImageTagsRelations as any;
+
+// 直播间相关表
+export const liveRooms = schema.liveRooms as any;
+export const liveStatusCache = schema.liveStatusCache as any;
+export const liveHistory = schema.liveHistory as any;
+export const liveRoomsRelations = schema.liveRoomsRelations as any;
+export const liveStatusCacheRelations = schema.liveStatusCacheRelations as any;
+export const liveHistoryRelations = schema.liveHistoryRelations as any;
