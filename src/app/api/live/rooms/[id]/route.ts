@@ -6,7 +6,7 @@ import { eq, and } from 'drizzle-orm';
 // 更新直播间
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = request.headers.get('X-User-Id');
@@ -19,7 +19,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const roomId = params.id;
+    const { id: roomId } = await params;
 
     const [room] = await db
       .update(liveRooms)
@@ -73,7 +73,7 @@ export async function PUT(
 // 删除直播间
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = request.headers.get('X-User-Id');
@@ -85,7 +85,7 @@ export async function DELETE(
       );
     }
 
-    const roomId = params.id;
+    const { id: roomId } = await params;
 
     const result = await db
       .delete(liveRooms)
