@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: syncedRooms.map((room) => ({
+      data: syncedRooms.map((room: any) => ({
         id: room.uniqueId,
         platform: room.platform,
         roomId: room.roomId,

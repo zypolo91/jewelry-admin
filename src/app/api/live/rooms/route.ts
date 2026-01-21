@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: rooms.map((room) => ({
+      data: rooms.map((room: any) => ({
         id: room.uniqueId,
         platform: room.platform,
         roomId: room.roomId,
